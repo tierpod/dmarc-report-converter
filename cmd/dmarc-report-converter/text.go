@@ -13,11 +13,13 @@ DMARC report with id {{.ReportMetadata.ReportID}}
   period {{.ReportMetadata.DateRange.Begin}}-{{.ReportMetadata.DateRange.End}}
 
 Policy published for {{.PolicyPublished.Domain}}: p={{.PolicyPublished.Policy}} pct={{.PolicyPublished.Pct}} adkim={{.PolicyPublished.ADKIM}} aspf={{.PolicyPublished.ASPF}}
-----------------------------------------------------------------------------------------------------
-{{printf "%16v|%16v|%4v|%10v|%8v|%8v|%16v|%16v" "ip"          "hostname" "msg"      "disp"                           "dkim r"                 "spf r"            "dkim domain"            "spf domain" }}
-----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+{{printf "%38v|%28v|%52v" "" "policy evaluated" "auth results" }}
+------------------------------------------------------------------------------------------------------------------------
+{{printf "%16v|%16v|%4v|%10v|%8v|%8v|%16v|%8v|%16v|%8v" "ip"          "hostname" "msg"      "disp"                           "dkim r"                  "spf r"                  "dkim domain"            "dkim rt"               "spf domain"            "spf r      "           }}
+------------------------------------------------------------------------------------------------------------------------
 {{- range .Record }}
-{{printf "%16v|%16v|%4v|%10v|%8v|%8v|%16v|%16v" .Row.SourceIP "TODO"     .Row.Count .Row.PolicyEvaluated.Disposition .AuthResults.DKIM.Result .AuthResults.SPF.Result .AuthResults.DKIM.Domain .AuthResults.DKIM.Domain}}
+{{printf "%16v|%16v|%4v|%10v|%8v|%8v|%16v|%8v|%16v|%8v" .Row.SourceIP "TODO"     .Row.Count .Row.PolicyEvaluated.Disposition .Row.PolicyEvaluated.DKIM .Row.PolicyEvaluated.SPF .AuthResults.DKIM.Domain .AuthResults.DKIM.Result .AuthResults.SPF.Domain .AuthResults.SPF.Result}}
 {{- end }}
 `
 
