@@ -3,6 +3,7 @@ package dmarc
 
 import (
 	"encoding/xml"
+	"sort"
 )
 
 // Report represents root of dmarc report struct
@@ -81,6 +82,10 @@ func Parse(b []byte) (Report, error) {
 	if err != nil {
 		return Report{}, err
 	}
+
+	sort.Slice(result.Record, func(i, j int) bool {
+		return result.Record[i].Row.Count > result.Record[j].Row.Count
+	})
 
 	return result, nil
 }
