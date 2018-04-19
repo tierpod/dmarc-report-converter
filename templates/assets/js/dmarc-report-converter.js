@@ -13,7 +13,7 @@ $(document).ready(function(){
         if ($(this).hasClass('auth-result-pass')) {
             auth_result_pass = auth_result_pass + msgc;
         } else {
-            auth_result_fail = auth_result_pass + msgc;
+            auth_result_fail = auth_result_fail + msgc;
         }
 
         var hostname = $(this).find('#hostname').text();
