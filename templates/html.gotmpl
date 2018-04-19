@@ -30,13 +30,25 @@ td.left-border, th.left-border
     <div class="container">
         <p></p>
         <div class="row">
-            <div class="col-sm">
+            <div class="col">
                 <div class="alert alert-primary" role="alert">
                 from {{.ReportMetadata.OrgName}} ({{.ReportMetadata.Email}})
                 </div>
                 <div class="alert alert-success" role="alert">
                 Policy published for {{.PolicyPublished.Domain}}: p={{.PolicyPublished.Policy}} pct={{.PolicyPublished.Pct}} adkim={{.PolicyPublished.ADKIM}} aspf={{.PolicyPublished.ASPF}}
                 </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <canvas id="hosts-chart"></canvas>
+            </div>
+            <div class="col">
+                <canvas id="stats-chart"></canvas>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
                 <table class="table table-striped table-sm" id="items-table">
                     <thead>
                         <tr>
@@ -59,7 +71,11 @@ td.left-border, th.left-border
                     </thead>
                     <tbody id="items-table">
                         {{- range .Record }}
-                        <tr>
+                        {{- if and (eq .AuthResults.DKIM.Result "pass") (eq .AuthResults.SPF.Result "pass") }}
+                        <tr class="auth-result-pass">
+                        {{- else }}
+                        <tr class="auth-result-fail">
+                        {{- end }}
                         <td id="ip">{{.Row.SourceIP}}</td>
                         <td id="hostname">{{.Row.SourceHostname}}</td>
                         <td id="msgc">{{.Row.Count}}</td>
@@ -103,9 +119,6 @@ td.left-border, th.left-border
                     </tbody>
                 </table>
             </div>
-        </div>
-        <div>
-            <canvas id="stats-chart"></canvas>
         </div>
     </div>
 </body>
