@@ -17,7 +17,9 @@ td.left-border, th.left-border
 
 <body>
     <script src="./assets/js/jquery-3.3.1.min.js"></script>
-    <script src="./js/assets/bootstrap.min.js"></script>
+    <script src="./assets/js/bootstrap.min.js"></script>
+    <script src="./assets/js/Chart.min.js"></script>
+    <script src="./assets/js/dmarc-report-converter.js"></script>
 
     <nav class="navbar navbar-dark bg-dark">
         <a class="navbar-brand" href="#" id="navbar-title">
@@ -58,9 +60,9 @@ td.left-border, th.left-border
                     <tbody id="items-table">
                         {{- range .Record }}
                         <tr>
-                        <td>{{.Row.SourceIP}}</td>
-                        <td>{{.Row.SourceHostname}}</td>
-                        <td>{{.Row.Count}}</td>
+                        <td id="ip">{{.Row.SourceIP}}</td>
+                        <td id="hostname">{{.Row.SourceHostname}}</td>
+                        <td id="msgc">{{.Row.Count}}</td>
                         <td class="left-border">{{.Row.PolicyEvaluated.Disposition}}</td>
                         <td>
                             {{- if eq .Row.PolicyEvaluated.DKIM "fail" }}
@@ -101,6 +103,9 @@ td.left-border, th.left-border
                     </tbody>
                 </table>
             </div>
+        </div>
+        <div>
+            <canvas id="stats-chart"></canvas>
         </div>
     </div>
 </body>
