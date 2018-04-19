@@ -69,8 +69,8 @@ $(document).ready(function(){
                 label: 'stats',
                 data: [auth_result_pass, auth_result_fail],
                 backgroundColor: [
-                    'rgba(54, 162, 235, 0.6)',
-                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(44, 160, 44, 0.6)',
+                    'rgba(214, 39, 40, 0.6)',
                 ],
                 borderWidth: 1
             }],
