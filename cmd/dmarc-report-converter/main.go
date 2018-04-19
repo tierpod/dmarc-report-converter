@@ -9,18 +9,23 @@ import (
 )
 
 var version string
+var cfg config
 
 func main() {
 	var (
 		flagVersion bool
 		//	flagConfig  string
-		flagInputDir  string
-		flagOutputDir string
+		flagInputDir     string
+		flagOutputDir    string
+		flagOutputFormat string
+		flagLookupAddr   bool
 	)
 
-	flag.BoolVar(&flagVersion, "version", false, "Show version and exit")
-	flag.StringVar(&flagInputDir, "i", "", "Path to input directory")
-	flag.StringVar(&flagOutputDir, "o", "", "Path to output directory")
+	flag.BoolVar(&flagVersion, "version", false, "show version and exit")
+	flag.StringVar(&flagInputDir, "in", "", "path to input directory")
+	flag.StringVar(&flagOutputDir, "out", "", "path to output directory")
+	flag.StringVar(&flagOutputFormat, "format", "text", "output format (text, html, json)")
+	flag.BoolVar(&flagLookupAddr, "lookup", false, "performs a reverse lookups")
 	//flag.StringVar(&flagConfig, "config", "./config.yaml", "Path to config file")
 	flag.Parse()
 
@@ -30,7 +35,12 @@ func main() {
 	}
 
 	if flagInputDir == "" || flagOutputDir == "" {
-		log.Fatal("-i or -o is not set")
+		log.Fatal("-in or -out is not set")
+	}
+
+	cfg, err := newConfig(flagOutputFormat, flagLookupAddr)
+	if err != nil {
+		log.Fatalf("[ERROR] %v", err)
 	}
 
 	inFiles, err := filepath.Glob(filepath.Join(flagInputDir, "*.*"))
@@ -38,9 +48,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if flagLookupAddr {
+		log.Printf("performs a reverse lookups, this may take some time")
+	}
+
 	log.Printf("found input files: %v", inFiles)
 	for _, f := range inFiles {
-		err = convertFile(f, flagOutputDir)
+		err = convertFile(f, flagOutputDir, cfg)
 		if err != nil {
 			log.Printf("[ERROR] %v", err)
 		}

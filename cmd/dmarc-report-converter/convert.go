@@ -5,20 +5,19 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"mime"
 	"os"
 	"path/filepath"
 
 	"github.com/tierpod/dmarc-report-converter/pkg/dmarc"
 )
 
-func convertFile(f, o string) error {
-	mt := mime.TypeByExtension(filepath.Ext(f))
-	log.Printf("convert file %v, mimetype %v", f, mt)
+func convertFile(i, o string, cfg *config) error {
+	ext := filepath.Ext(i)
+	log.Printf("convert file %v, extension %v", i, ext)
 
-	switch mt {
-	case "application/gzip":
-		file, err := os.Open(f)
+	switch ext {
+	case ".gz":
+		file, err := os.Open(i)
 		if err != nil {
 			return err
 		}
@@ -35,18 +34,18 @@ func convertFile(f, o string) error {
 			return err
 		}
 
-		d, err := dmarc.Parse(data)
+		d, err := dmarc.Parse(data, cfg.lookupAddr)
 		if err != nil {
 			return err
 		}
 
-		err = textOutput(d, o)
+		err = textOutput(d, cfg)
 		if err != nil {
 			return err
 		}
 
 	default:
-		return fmt.Errorf("unknown mimetype %v for file %v", mt, f)
+		return fmt.Errorf("extention %v not supported for file %v", ext, i)
 	}
 
 	return nil

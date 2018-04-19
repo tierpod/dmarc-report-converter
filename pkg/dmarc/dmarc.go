@@ -3,6 +3,7 @@ package dmarc
 
 import (
 	"encoding/xml"
+	"net"
 	"sort"
 )
 
@@ -49,6 +50,7 @@ type Row struct {
 	SourceIP        string          `xml:"source_ip"` // TODO: ip
 	Count           int             `xml:"count"`
 	PolicyEvaluated PolicyEvaluated `xml:"policy_evaluated"`
+	SourceHostname  string
 }
 
 // PolicyEvaluated represents feedback>record>row>policy_evaluated section
@@ -76,7 +78,7 @@ type AuthResult struct {
 }
 
 // Parse parses input xml bytes to DMARCReport struct
-func Parse(b []byte) (Report, error) {
+func Parse(b []byte, lookupAddr bool) (Report, error) {
 	var result Report
 	err := xml.Unmarshal(b, &result)
 	if err != nil {
@@ -87,5 +89,24 @@ func Parse(b []byte) (Report, error) {
 		return result.Record[i].Row.Count > result.Record[j].Row.Count
 	})
 
+	if lookupAddr {
+		reportLookupAddr(&result)
+	}
+
 	return result, nil
+}
+
+func reportLookupAddr(r *Report) error {
+	for i, record := range r.Record {
+		var hostname string
+		hostnames, err := net.LookupAddr(record.Row.SourceIP)
+		if err != nil {
+			hostname = ""
+		} else {
+			hostname = hostnames[0]
+		}
+		r.Record[i].Row.SourceHostname = hostname
+	}
+
+	return nil
 }
