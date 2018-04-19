@@ -12,6 +12,8 @@ import (
 )
 
 func convertFile(i string, cfg *config) error {
+	var d dmarc.Report
+
 	ext := filepath.Ext(i)
 	log.Printf("convert file %v, extension %v", i, ext)
 
@@ -34,18 +36,19 @@ func convertFile(i string, cfg *config) error {
 			return err
 		}
 
-		d, err := dmarc.Parse(data, cfg.lookupAddr)
-		if err != nil {
-			return err
-		}
-
-		err = textOutput(d, cfg)
+		d, err = dmarc.Parse(data, cfg.lookupAddr)
 		if err != nil {
 			return err
 		}
 
 	default:
 		return fmt.Errorf("extention %v not supported for file %v", ext, i)
+	}
+
+	o := newOutput(cfg)
+	err := o.do(d)
+	if err != nil {
+		return err
 	}
 
 	return nil

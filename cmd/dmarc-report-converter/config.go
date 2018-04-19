@@ -1,10 +1,14 @@
 package main
 
-import "io/ioutil"
+import (
+	"fmt"
+	"io/ioutil"
+)
 
 type config struct {
 	tmpl       string
 	outDir     string
+	outFormat  string
 	lookupAddr bool
 }
 
@@ -13,16 +17,21 @@ func newConfig(outDir, outFormat string, lookupAddr bool) (*config, error) {
 	var err error
 
 	switch outFormat {
-	case "text":
-		t, err = loadTemplate("./templates/text.gotmpl")
+	case "txt":
+		t, err = loadTemplate("./templates/txt.gotmpl")
 		if err != nil {
 			return nil, err
 		}
+	case "html":
+	case "json":
+	default:
+		return nil, fmt.Errorf("unknown template for format %v", outFormat)
 	}
 
 	c := &config{
 		tmpl:       t,
 		outDir:     outDir,
+		outFormat:  outFormat,
 		lookupAddr: lookupAddr,
 	}
 

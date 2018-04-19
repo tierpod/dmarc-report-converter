@@ -24,7 +24,7 @@ func main() {
 	flag.BoolVar(&flagVersion, "version", false, "show version and exit")
 	flag.StringVar(&flagInputDir, "in", "", "path to input directory")
 	flag.StringVar(&flagOutputDir, "out", "", "path to output directory (if is not set, print to stdout)")
-	flag.StringVar(&flagOutputFormat, "format", "text", "output format (text, html, json)")
+	flag.StringVar(&flagOutputFormat, "format", "txt", "output format (text, html, json)")
 	flag.BoolVar(&flagLookupAddr, "lookup", false, "performs a reverse lookups")
 	//flag.StringVar(&flagConfig, "config", "./config.yaml", "Path to config file")
 	flag.Parse()
