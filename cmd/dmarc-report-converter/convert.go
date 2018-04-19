@@ -11,7 +11,7 @@ import (
 	"github.com/tierpod/dmarc-report-converter/pkg/dmarc"
 )
 
-func convertFile(i, o string, cfg *config) error {
+func convertFile(i string, cfg *config) error {
 	ext := filepath.Ext(i)
 	log.Printf("convert file %v, extension %v", i, ext)
 

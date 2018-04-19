@@ -4,12 +4,14 @@ import "io/ioutil"
 
 type config struct {
 	tmpl       string
+	outDir     string
 	lookupAddr bool
 }
 
-func newConfig(outFormat string, lookupAddr bool) (*config, error) {
+func newConfig(outDir, outFormat string, lookupAddr bool) (*config, error) {
 	var t string
 	var err error
+
 	switch outFormat {
 	case "text":
 		t, err = loadTemplate("./templates/text.gotmpl")
@@ -20,6 +22,7 @@ func newConfig(outFormat string, lookupAddr bool) (*config, error) {
 
 	c := &config{
 		tmpl:       t,
+		outDir:     outDir,
 		lookupAddr: lookupAddr,
 	}
 

@@ -23,7 +23,7 @@ func main() {
 
 	flag.BoolVar(&flagVersion, "version", false, "show version and exit")
 	flag.StringVar(&flagInputDir, "in", "", "path to input directory")
-	flag.StringVar(&flagOutputDir, "out", "", "path to output directory")
+	flag.StringVar(&flagOutputDir, "out", "", "path to output directory (if is not set, print to stdout)")
 	flag.StringVar(&flagOutputFormat, "format", "text", "output format (text, html, json)")
 	flag.BoolVar(&flagLookupAddr, "lookup", false, "performs a reverse lookups")
 	//flag.StringVar(&flagConfig, "config", "./config.yaml", "Path to config file")
@@ -34,11 +34,11 @@ func main() {
 		os.Exit(0)
 	}
 
-	if flagInputDir == "" || flagOutputDir == "" {
-		log.Fatal("-in or -out is not set")
+	if flagInputDir == "" {
+		log.Fatal("-in is not set")
 	}
 
-	cfg, err := newConfig(flagOutputFormat, flagLookupAddr)
+	cfg, err := newConfig(flagOutputDir, flagOutputFormat, flagLookupAddr)
 	if err != nil {
 		log.Fatalf("[ERROR] %v", err)
 	}
@@ -54,7 +54,7 @@ func main() {
 
 	log.Printf("found input files: %v", inFiles)
 	for _, f := range inFiles {
-		err = convertFile(f, flagOutputDir, cfg)
+		err = convertFile(f, cfg)
 		if err != nil {
 			log.Printf("[ERROR] %v", err)
 		}
