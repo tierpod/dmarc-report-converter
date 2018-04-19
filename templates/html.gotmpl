@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap core CSS -->
+    <link href="./assets/css/bootstrap.min.css" rel="stylesheet">
+<style>
+td.left-border, th.left-border
+{
+    border-left: 1px solid #dee2e6;
+}
+</style>
+</head>
+
+<body>
+    <script src="./assets/js/jquery-3.3.1.min.js"></script>
+    <script src="./js/assets/bootstrap.min.js"></script>
+
+    <nav class="navbar navbar-dark bg-dark">
+        <a class="navbar-brand" href="#" id="navbar-title">
+            DMARC report with id {{.ReportMetadata.ReportID}} (period {{.ReportMetadata.DateRange.Begin}}-{{.ReportMetadata.DateRange.End}})
+        </a>
+    </nav>
+
+    <div class="container">
+        <p></p>
+        <div class="row">
+            <div class="col-sm">
+                <div class="alert alert-primary" role="alert">
+                from {{.ReportMetadata.OrgName}} ({{.ReportMetadata.Email}})
+                </div>
+                <div class="alert alert-success" role="alert">
+                Policy published for {{.PolicyPublished.Domain}}: p={{.PolicyPublished.Policy}} pct={{.PolicyPublished.Pct}} adkim={{.PolicyPublished.ADKIM}} aspf={{.PolicyPublished.ASPF}}
+                </div>
+                <table class="table table-striped table-sm" id="items-table">
+                    <thead>
+                        <tr>
+                        <th scope="col" colspan="3"></th>
+                        <th scope="col" colspan="3" class="left-border">policy evaluated</th>
+                        <th scope="col" colspan="4" class="left-border">auth results</th>
+                        </tr>
+                        <tr>
+                        <th scope="col">ip</th>
+                        <th scope="col" data-toggle="tooltip" data-placement="top" title="ptr records">hostname</th>
+                        <th scope="col" data-toggle="tooltip" data-placement="top" title="messages count">msgs</th>
+                        <th scope="col" class="left-border">disposition</th>
+                        <th scope="col">DKIM</th>
+                        <th scope="col">SPF</th>
+                        <th scope="col" class="left-border">DKIM domain</th>
+                        <th scope="col">result</th>
+                        <th scope="col">SPF domain</th>
+                        <th scope="col">result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items-table">
+                        {{- range .Record }}
+                        <tr>
+                        <td>{{.Row.SourceIP}}</td>
+                        <td>{{.Row.SourceHostname}}</td>
+                        <td>{{.Row.Count}}</td>
+                        <td class="left-border">{{.Row.PolicyEvaluated.Disposition}}</td>
+                        <td>
+                            {{- if eq .Row.PolicyEvaluated.DKIM "fail" }}
+                            <span class="badge badge-danger">{{.Row.PolicyEvaluated.DKIM}}</span>
+                            {{- else }}
+                            <span class="badge badge-success">{{.Row.PolicyEvaluated.DKIM}}</span>
+                            {{- end}}
+                        </td>
+                        <td>
+                            {{- if eq .Row.PolicyEvaluated.SPF "fail" }}
+                            <span class="badge badge-danger">{{.Row.PolicyEvaluated.SPF}}</span>
+                            {{- else }}
+                            <span class="badge badge-success">{{.Row.PolicyEvaluated.SPF}}</span>
+                            {{- end }}
+                        </td>
+                        <td class="left-border">{{.AuthResults.DKIM.Domain}}</td>
+                        <td>
+                            {{- if eq .AuthResults.DKIM.Result "pass"}}
+                            <span class="badge badge-success">{{.AuthResults.DKIM.Result}}</span>
+                            {{- else if eq .AuthResults.DKIM.Result "fail"}}
+                            <span class="badge badge-danger">{{.AuthResults.DKIM.Result}}</span>
+                            {{- else}}
+                            <span class="badge badge-warning">{{.AuthResults.DKIM.Result}}</span>
+                            {{- end}}
+                        </td>
+                        <td>{{.AuthResults.SPF.Domain}}</td>
+                        <td>
+                            {{- if eq .AuthResults.SPF.Result "pass"}}
+                            <span class="badge badge-success">{{.AuthResults.SPF.Result}}</span>
+                            {{- else if eq .AuthResults.SPF.Result "fail"}}
+                            <span class="badge badge-danger">{{.AuthResults.SPF.Result}}</span>
+                            {{- else}}
+                            <span class="badge badge-warning">{{.AuthResults.SPF.Result}}</span>
+                            {{- end}}
+                        </td>
+                        </tr>
+                        {{- end }}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

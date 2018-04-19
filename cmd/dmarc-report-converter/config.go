@@ -17,12 +17,11 @@ func newConfig(outDir, outFormat string, lookupAddr bool) (*config, error) {
 	var err error
 
 	switch outFormat {
-	case "txt":
-		t, err = loadTemplate("./templates/txt.gotmpl")
+	case "txt", "html":
+		t, err = loadTemplate("./templates/" + outFormat + ".gotmpl")
 		if err != nil {
 			return nil, err
 		}
-	case "html":
 	case "json":
 	default:
 		return nil, fmt.Errorf("unknown template for format %v", outFormat)

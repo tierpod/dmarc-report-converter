@@ -39,12 +39,10 @@ func (o *output) do(d dmarc.Report) error {
 	}
 
 	switch o.cfg.outFormat {
-	case "txt":
-		err = o.txt(d)
+	case "txt", "html":
+		err = o.template(d)
 	case "json":
 		err = o.json(d)
-	case "html":
-		err = o.html(d)
 	default:
 		return fmt.Errorf("unknown output format %v", o.cfg.outFormat)
 	}
@@ -52,8 +50,7 @@ func (o *output) do(d dmarc.Report) error {
 	return err
 }
 
-func (o *output) txt(d dmarc.Report) error {
-	fmt.Printf("%+v\n", o.cfg)
+func (o *output) template(d dmarc.Report) error {
 	t := template.Must(template.New("report").Parse(o.cfg.tmpl))
 	err := t.Execute(o.w, d)
 	if err != nil {
@@ -71,8 +68,4 @@ func (o *output) json(d dmarc.Report) error {
 
 	fmt.Fprint(o.w, string(js))
 	return nil
-}
-
-func (o *output) html(d dmarc.Report) error {
-	return fmt.Errorf("not implemented yet")
 }
