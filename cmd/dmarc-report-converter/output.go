@@ -74,5 +74,5 @@ func (o *output) json(d dmarc.Report) error {
 }
 
 func (o *output) html(d dmarc.Report) error {
-	return nil
+	return fmt.Errorf("not implemented yet")
 }
