@@ -3,7 +3,7 @@ input:
   dir: "/tmp/input"
   #imap:
   #  server: ""
-  #  usename: ""
+  #  username: ""
   #  password: ""
   #  mailbox: ""
 
