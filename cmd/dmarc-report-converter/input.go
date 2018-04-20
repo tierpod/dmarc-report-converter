@@ -2,42 +2,17 @@ package main
 
 import (
 	"archive/zip"
+	"bytes"
 	"compress/gzip"
+	"io"
+	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 
 	"github.com/tierpod/dmarc-report-converter/pkg/dmarc"
 )
 
-func readXML(i string, cfg *config) (dmarc.Report, error) {
-	file, err := os.Open(i)
-	if err != nil {
-		return dmarc.Report{}, err
-	}
-	defer file.Close()
-
-	d, err := dmarc.ReadParse(file, cfg.LookupAddr)
-	if err != nil {
-		return dmarc.Report{}, err
-	}
-
-	return d, nil
-}
-
-func readGZIP(i string, cfg *config) (dmarc.Report, error) {
-	file, err := os.Open(i)
-	if err != nil {
-		return dmarc.Report{}, err
-	}
-	defer file.Close()
-
-	r, err := gzip.NewReader(file)
-	if err != nil {
-		return dmarc.Report{}, err
-	}
-	defer r.Close()
-
+func readXML(r io.Reader, cfg *config) (dmarc.Report, error) {
 	d, err := dmarc.ReadParse(r, cfg.LookupAddr)
 	if err != nil {
 		return dmarc.Report{}, err
@@ -46,14 +21,36 @@ func readGZIP(i string, cfg *config) (dmarc.Report, error) {
 	return d, nil
 }
 
-func readZIP(i string, cfg *config) (dmarc.Report, error) {
-	r, err := zip.OpenReader(i)
+func readGZIP(r io.Reader, cfg *config) (dmarc.Report, error) {
+	gr, err := gzip.NewReader(r)
 	if err != nil {
 		return dmarc.Report{}, err
 	}
-	defer r.Close()
+	defer gr.Close()
 
-	for _, file := range r.File {
+	d, err := dmarc.ReadParse(gr, cfg.LookupAddr)
+	if err != nil {
+		return dmarc.Report{}, err
+	}
+
+	return d, nil
+}
+
+func readZIP(r io.Reader, cfg *config) (dmarc.Report, error) {
+	zipBytes, err := ioutil.ReadAll(r)
+	if err != nil {
+		return dmarc.Report{}, err
+	}
+
+	size := int64(len(zipBytes))
+	readerAt := bytes.NewReader(zipBytes)
+
+	zr, err := zip.NewReader(readerAt, size)
+	if err != nil {
+		return dmarc.Report{}, err
+	}
+
+	for _, file := range zr.File {
 		if filepath.Ext(file.Name) != ".xml" {
 			log.Printf("[WARN] skip %v from zip: unknown extension\n", file.Name)
 			continue

@@ -14,11 +14,19 @@ func processFiles(cfg *config) {
 
 	log.Printf("found input files: %v", inFiles)
 	for _, f := range inFiles {
-		err = convertFile(f, cfg)
+		file, err := os.Open(f)
+		if err != nil {
+			log.Printf("[ERROR] %v", err)
+			continue
+		}
+		defer file.Close()
+
+		err = readConvert(file, f, cfg)
 		if err != nil {
 			log.Printf("[ERROR] %v, skip", err)
 			continue
 		}
+		file.Close()
 
 		if cfg.Input.Delete {
 			log.Printf("delete %v after converting", f)
