@@ -44,8 +44,12 @@ func processIMAP(cfg *config) {
 
 	log.Printf("[INFO] imap: found messages %v, unseen %v", mbox.Messages, mbox.Unseen)
 
+	// set for all messages
 	seqSet := new(imap.SeqSet)
 	seqSet.AddRange(from, to)
+
+	// set for delete messages
+	deleteSet := new(imap.SeqSet)
 
 	// get the whole message body
 	section := &imap.BodySectionName{}
@@ -60,7 +64,6 @@ func processIMAP(cfg *config) {
 
 	doneCount := 0
 	for msg := range messages {
-		//fmt.Printf("%+v\n", msg.)
 		if msg == nil {
 			log.Printf("[ERROR] imap: server didn't returned message")
 			return
@@ -102,12 +105,27 @@ func processIMAP(cfg *config) {
 			}
 		}
 
+		log.Printf("[DEBUG] add SeqNum %v to delete set", msg.SeqNum)
+		deleteSet.AddNum(msg.SeqNum)
 		doneCount++
 	}
 
 	if err := <-done; err != nil {
 		log.Printf("[ERROR] imap: %v", err)
 		return
+	}
+
+	if cfg.Input.Delete {
+		log.Printf("delete emails after converting")
+
+		delItems := imap.FormatFlagsOp(imap.AddFlags, false)
+		delFlags := []interface{}{imap.SeenFlag, imap.DeletedFlag}
+
+		err := c.Store(deleteSet, delItems, delFlags, nil)
+		if err != nil {
+			log.Printf("[ERROR] imap: %v", err)
+			return
+		}
 	}
 
 	log.Printf("[INFO] imap: done %v items", doneCount)
