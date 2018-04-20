@@ -1,14 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/tierpod/dmarc-report-converter/pkg/dmarc"
 )
@@ -26,9 +25,16 @@ func newOutput(cfg *config) *output {
 func (o *output) do(d dmarc.Report) error {
 	var err error
 
-	// if -out is set, choose output file name and open file for writing
-	if o.cfg.outDir != "" {
-		filepath := filepath.Join(o.cfg.outDir, d.ReportMetadata.Email+"!"+d.PolicyPublished.Domain+"!"+strconv.Itoa(d.ReportMetadata.DateRange.Begin)+"-"+strconv.Itoa(d.ReportMetadata.DateRange.Begin)+"."+o.cfg.outFormat)
+	// if config Output.Dir is set, choose output file name and open file for writing
+	if o.cfg.Output.Dir != "" {
+		// generate output filename from config filename template
+		var buf bytes.Buffer
+		err := o.cfg.Output.fileTemplate.Execute(&buf, d)
+		if err != nil {
+			return err
+		}
+
+		filepath := filepath.Join(o.cfg.Output.Dir, buf.String())
 		log.Printf("output to file %v\n", filepath)
 		f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
@@ -38,21 +44,20 @@ func (o *output) do(d dmarc.Report) error {
 		defer f.Close()
 	}
 
-	switch o.cfg.outFormat {
+	switch o.cfg.Output.Format {
 	case "txt", "html":
 		err = o.template(d)
 	case "json":
 		err = o.json(d)
 	default:
-		return fmt.Errorf("unknown output format %v", o.cfg.outFormat)
+		return fmt.Errorf("unknown output format %v", o.cfg.Output.Format)
 	}
 
 	return err
 }
 
 func (o *output) template(d dmarc.Report) error {
-	t := template.Must(template.New("report").Parse(o.cfg.tmpl))
-	err := t.Execute(o.w, d)
+	err := o.cfg.Output.template.Execute(o.w, d)
 	if err != nil {
 		return err
 	}

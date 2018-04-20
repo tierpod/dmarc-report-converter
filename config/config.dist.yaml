@@ -1,0 +1,19 @@
+input:
+  delete: no
+  dir: "/tmp/input"
+  #imap:
+  #  server: ""
+  #  usename: ""
+  #  password: ""
+  #  mailbox: ""
+
+output:
+  # set to "" for output to stdout
+  dir: "/tmp/html"
+  # template for output file
+  file_template: "{{ .ReportMetadata.Email }}!{{ .PolicyPublished.Domain }}!{{.ReportMetadata.DateRange.Begin}}.html"
+  # txt, json, html
+  format: "html"
+
+# perform reverse lookups?
+lookup_addr: no

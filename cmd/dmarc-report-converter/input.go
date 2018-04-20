@@ -17,7 +17,7 @@ func readXML(i string, cfg *config) (dmarc.Report, error) {
 	}
 	defer file.Close()
 
-	d, err := dmarc.ReadParse(file, cfg.lookupAddr)
+	d, err := dmarc.ReadParse(file, cfg.LookupAddr)
 	if err != nil {
 		return dmarc.Report{}, err
 	}
@@ -38,7 +38,7 @@ func readGZIP(i string, cfg *config) (dmarc.Report, error) {
 	}
 	defer r.Close()
 
-	d, err := dmarc.ReadParse(r, cfg.lookupAddr)
+	d, err := dmarc.ReadParse(r, cfg.LookupAddr)
 	if err != nil {
 		return dmarc.Report{}, err
 	}
@@ -67,7 +67,7 @@ func readZIP(i string, cfg *config) (dmarc.Report, error) {
 		}
 		defer rr.Close()
 
-		d, err := dmarc.ReadParse(rr, cfg.lookupAddr)
+		d, err := dmarc.ReadParse(rr, cfg.LookupAddr)
 		if err != nil {
 			return dmarc.Report{}, err
 		}

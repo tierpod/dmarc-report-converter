@@ -2,46 +2,79 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"io/ioutil"
+
+	"gopkg.in/yaml.v2"
 )
 
 type config struct {
-	tmpl       string
-	outDir     string
-	outFormat  string
-	lookupAddr bool
+	Input      Input  `yaml:"input"`
+	Output     Output `yaml:"output"`
+	LookupAddr bool   `yaml:"lookup_addr"`
 }
 
-func newConfig(outDir, outFormat string, lookupAddr bool) (*config, error) {
-	var t string
-	var err error
-
-	switch outFormat {
-	case "txt", "html":
-		t, err = loadTemplate("./templates/" + outFormat + ".gotmpl")
-		if err != nil {
-			return nil, err
-		}
-	case "json":
-	default:
-		return nil, fmt.Errorf("unknown template for format %v", outFormat)
-	}
-
-	c := &config{
-		tmpl:       t,
-		outDir:     outDir,
-		outFormat:  outFormat,
-		lookupAddr: lookupAddr,
-	}
-
-	return c, nil
+// Input is the input section of config
+type Input struct {
+	Dir    string `yaml:"dir"`
+	IMAP   IMAP   `yaml:"imap"`
+	Delete bool   `yaml:"delete"`
 }
 
-func loadTemplate(s string) (string, error) {
+// IMAP is the input.imap section of config
+type IMAP struct {
+	Server   string `yaml:"server"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Mailbox  string `yaml:"mailbox"`
+}
+
+// Output is the output section of config
+type Output struct {
+	Dir          string `yaml:"dir"`
+	FileTemplate string `yaml:"file_template"`
+	fileTemplate *template.Template
+	Format       string `yaml:"format"`
+	Template     string
+	template     *template.Template
+}
+
+func loadTemplate(s string) *template.Template {
 	data, err := ioutil.ReadFile(s)
 	if err != nil {
-		return "", err
+		panic(err)
 	}
 
-	return string(data), err
+	t := template.Must(template.New("report").Parse(string(data)))
+	return t
+}
+
+func loadConfig(path string) (*config, error) {
+	var c config
+
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	err = yaml.Unmarshal(data, &c)
+	if err != nil {
+		return nil, err
+	}
+
+	// load and parse output file template
+	switch c.Output.Format {
+	case "txt", "html":
+		t := loadTemplate("./templates/" + c.Output.Format + ".gotmpl")
+		c.Output.template = t
+	case "json":
+	default:
+		return nil, fmt.Errorf("unknown template for format %v", c.Output.Format)
+	}
+
+	// load and parse output filename template
+	ft := template.Must(template.New("filename").Parse(c.Output.FileTemplate))
+	c.Output.fileTemplate = ft
+
+	return &c, nil
 }

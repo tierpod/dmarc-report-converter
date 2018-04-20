@@ -13,21 +13,11 @@ var version string
 func main() {
 	var (
 		flagVersion bool
-		//	flagConfig  string
-		flagInputDir     string
-		flagOutputDir    string
-		flagOutputFormat string
-		flagLookupAddr   bool
-		flagDelete       bool
+		flagConfig  string
 	)
 
 	flag.BoolVar(&flagVersion, "version", false, "show version and exit")
-	flag.StringVar(&flagInputDir, "in", "", "path to input directory")
-	flag.StringVar(&flagOutputDir, "out", "", "path to output directory (if is not set, print to stdout)")
-	flag.StringVar(&flagOutputFormat, "format", "txt", "output format (text, html, json)")
-	flag.BoolVar(&flagLookupAddr, "lookup", false, "performs a reverse lookups")
-	flag.BoolVar(&flagDelete, "delete", false, "delete source file after conversation")
-	//flag.StringVar(&flagConfig, "config", "./config.yaml", "Path to config file")
+	flag.StringVar(&flagConfig, "config", "./config.yaml", "Path to config file")
 	flag.Parse()
 
 	if flagVersion {
@@ -35,21 +25,19 @@ func main() {
 		os.Exit(0)
 	}
 
-	if flagInputDir == "" {
-		log.Fatal("-in is not set")
-	}
-
-	cfg, err := newConfig(flagOutputDir, flagOutputFormat, flagLookupAddr)
+	cfg, err := loadConfig(flagConfig)
 	if err != nil {
 		log.Fatalf("[ERROR] %v", err)
 	}
 
-	inFiles, err := filepath.Glob(filepath.Join(flagInputDir, "*.*"))
+	fmt.Printf("%+v\n", cfg)
+
+	inFiles, err := filepath.Glob(filepath.Join(cfg.Input.Dir, "*.*"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if flagLookupAddr {
+	if cfg.LookupAddr {
 		log.Printf("performs a reverse lookups, this may take some time")
 	}
 
@@ -61,7 +49,7 @@ func main() {
 			continue
 		}
 
-		if flagDelete {
+		if cfg.Input.Delete {
 			log.Printf("delete %v after converting", f)
 			err = os.Remove(f)
 			if err != nil {
