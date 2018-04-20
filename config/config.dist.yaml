@@ -11,7 +11,7 @@ output:
   # set to "" for output to stdout
   dir: "/tmp/html"
   # template for output file
-  file_template: "{{ .ReportMetadata.Email }}!{{ .PolicyPublished.Domain }}!{{.ReportMetadata.DateRange.Begin}}.html"
+  file_template: "{{ .ReportMetadata.Email }}/{{ .PolicyPublished.Domain }}!{{.ReportMetadata.DateRange.Begin}}!{{ .ReportMetadata.ReportID }}.html"
   # txt, json, html
   format: "html"
 

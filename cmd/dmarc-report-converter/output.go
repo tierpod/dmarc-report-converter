@@ -34,9 +34,15 @@ func (o *output) do(d dmarc.Report) error {
 			return err
 		}
 
-		filepath := filepath.Join(o.cfg.Output.Dir, buf.String())
-		log.Printf("output to file %v\n", filepath)
-		f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		file := filepath.Join(o.cfg.Output.Dir, buf.String())
+		dir := filepath.Dir(file)
+		err = os.MkdirAll(dir, 0755)
+		if err != nil {
+			return nil
+		}
+
+		log.Printf("output to file %v\n", file)
+		f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return err
 		}
