@@ -28,6 +28,12 @@ func convertFile(i string, cfg *config) error {
 			return err
 		}
 
+	case ".xml":
+		report, err = readXML(i)
+		if err != nil {
+			return err
+		}
+
 	default:
 		return fmt.Errorf("extention %v not supported for file %v", ext, i)
 	}
