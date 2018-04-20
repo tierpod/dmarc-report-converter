@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net"
 	"sort"
+	"time"
 )
 
 // Report represents root of dmarc report struct
@@ -27,8 +28,22 @@ type ReportMetadata struct {
 
 // DateRange represents feedback>report_metadata>date_range section
 type DateRange struct {
-	Begin int `xml:"begin" json:"begin"` // TODO: time
-	End   int `xml:"end" json:"end"`     // TODO: time
+	Begin DateTime `xml:"begin" json:"begin"` // TODO: time
+	End   DateTime `xml:"end" json:"end"`     // TODO: time
+}
+
+// DateTime is the custom time for DateRange.Begin and DateRange.End values
+type DateTime struct {
+	time.Time
+}
+
+// UnmarshalXML unmarshals unix timestamp to time.Time
+func (t *DateTime) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	var v int64
+	d.DecodeElement(&v, &start)
+	datetime := time.Unix(v, 0)
+	*t = DateTime{datetime}
+	return nil
 }
 
 // PolicyPublished represents feedback>policy_published section
