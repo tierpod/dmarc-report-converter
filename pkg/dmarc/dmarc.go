@@ -3,6 +3,8 @@ package dmarc
 
 import (
 	"encoding/xml"
+	"io"
+	"io/ioutil"
 	"net"
 	"sort"
 )
@@ -77,7 +79,7 @@ type AuthResult struct {
 	Result string `xml:"result" json:"result"`
 }
 
-// Parse parses input xml bytes to DMARCReport struct. If lookupAddr is true, performs a reverse
+// Parse parses input xml bytes to Report struct. If lookupAddr is true, performs a reverse
 // lookups for feedback>record>row>source_ip
 func Parse(b []byte, lookupAddr bool) (Report, error) {
 	var result Report
@@ -91,13 +93,29 @@ func Parse(b []byte, lookupAddr bool) (Report, error) {
 	})
 
 	if lookupAddr {
-		reportLookupAddr(&result)
+		doPTRlookup(&result)
 	}
 
 	return result, nil
 }
 
-func reportLookupAddr(r *Report) error {
+// ReadParse reads input xml bytes from reader and parses it to Report struct. If lookupAddr is
+// true, performs a reverse lookups for feedback>record>row>source_ip
+func ReadParse(r io.Reader, lookupAddr bool) (Report, error) {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return Report{}, err
+	}
+
+	report, err := Parse(data, lookupAddr)
+	if err != nil {
+		return Report{}, err
+	}
+
+	return report, nil
+}
+
+func doPTRlookup(r *Report) error {
 	for i, record := range r.Record {
 		var hostname string
 		hostnames, err := net.LookupAddr(record.Row.SourceIP)

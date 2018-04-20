@@ -1,42 +1,29 @@
 package main
 
 import (
-	"compress/gzip"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 
 	"github.com/tierpod/dmarc-report-converter/pkg/dmarc"
 )
 
 func convertFile(i string, cfg *config) error {
-	var d dmarc.Report
+	var report dmarc.Report
+	var err error
 
 	ext := filepath.Ext(i)
 	log.Printf("convert file %v, extension %v", i, ext)
 
 	switch ext {
 	case ".gz":
-		file, err := os.Open(i)
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-
-		r, err := gzip.NewReader(file)
-		if err != nil {
-			return err
-		}
-		defer r.Close()
-
-		data, err := ioutil.ReadAll(r)
+		report, err = readGZIP(i)
 		if err != nil {
 			return err
 		}
 
-		d, err = dmarc.Parse(data, cfg.lookupAddr)
+	case ".zip":
+		report, err = readZIP(i)
 		if err != nil {
 			return err
 		}
@@ -46,7 +33,7 @@ func convertFile(i string, cfg *config) error {
 	}
 
 	o := newOutput(cfg)
-	err := o.do(d)
+	err = o.do(report)
 	if err != nil {
 		return err
 	}

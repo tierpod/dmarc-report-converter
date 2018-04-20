@@ -56,7 +56,7 @@ func main() {
 	for _, f := range inFiles {
 		err = convertFile(f, cfg)
 		if err != nil {
-			log.Printf("[ERROR] %v", err)
+			log.Printf("[ERROR] %v, skip", err)
 		}
 	}
 }
