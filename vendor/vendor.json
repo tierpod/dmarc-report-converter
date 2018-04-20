@@ -3,6 +3,114 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "kEy5i/jCIjemJK/sytEXjV5qWl4=",
+			"path": "github.com/emersion/go-imap",
+			"revision": "b63c7c7011cba491f40dcc43026cc30e2fbdf337",
+			"revisionTime": "2018-03-19T18:19:01Z"
+		},
+		{
+			"checksumSHA1": "m1UQ9TN1mpTio7EoixtE84USirA=",
+			"path": "github.com/emersion/go-imap/client",
+			"revision": "b63c7c7011cba491f40dcc43026cc30e2fbdf337",
+			"revisionTime": "2018-03-19T18:19:01Z"
+		},
+		{
+			"checksumSHA1": "6erZwD6QaIdhAdgasbTiatDgd8A=",
+			"path": "github.com/emersion/go-imap/commands",
+			"revision": "b63c7c7011cba491f40dcc43026cc30e2fbdf337",
+			"revisionTime": "2018-03-19T18:19:01Z"
+		},
+		{
+			"checksumSHA1": "XNQ6ZbE8XFjdjg/M/iRrOu3j6h8=",
+			"path": "github.com/emersion/go-imap/responses",
+			"revision": "b63c7c7011cba491f40dcc43026cc30e2fbdf337",
+			"revisionTime": "2018-03-19T18:19:01Z"
+		},
+		{
+			"checksumSHA1": "1K8gxGND9yVG8p+ZQdxVczy6x/w=",
+			"path": "github.com/emersion/go-imap/utf7",
+			"revision": "b63c7c7011cba491f40dcc43026cc30e2fbdf337",
+			"revisionTime": "2018-03-19T18:19:01Z"
+		},
+		{
+			"checksumSHA1": "lyRS2uliigRHMWOJ29mqp1R/SrI=",
+			"path": "github.com/emersion/go-message",
+			"revision": "51445bfdc558d43bf3582f85b13e30210f469d35",
+			"revisionTime": "2018-03-21T17:30:51Z"
+		},
+		{
+			"checksumSHA1": "CGTeS8K8sFttse59HzvO8kAlel8=",
+			"path": "github.com/emersion/go-message/charset",
+			"revision": "51445bfdc558d43bf3582f85b13e30210f469d35",
+			"revisionTime": "2018-03-21T17:30:51Z"
+		},
+		{
+			"checksumSHA1": "4vGohzrol/NZkVNNTOd9lKrFajU=",
+			"path": "github.com/emersion/go-message/mail",
+			"revision": "51445bfdc558d43bf3582f85b13e30210f469d35",
+			"revisionTime": "2018-03-21T17:30:51Z"
+		},
+		{
+			"checksumSHA1": "VGdrJ5SV27dfTYVafzkH03uotLA=",
+			"path": "github.com/emersion/go-sasl",
+			"revision": "7e096a0a6197b89989e8cc31016daa67c8c62051",
+			"revisionTime": "2016-11-16T18:30:48Z"
+		},
+		{
+			"checksumSHA1": "BX9blgbaHp0hnLTAxqNwVZgWra4=",
+			"path": "github.com/emersion/go-textwrapper",
+			"revision": "d0e65e56babe3f687ff94c1d764ca0e6aa7723ee",
+			"revisionTime": "2016-06-06T18:21:33Z"
+		},
+		{
+			"checksumSHA1": "Mr4ur60bgQJnQFfJY0dGtwWwMPE=",
+			"path": "golang.org/x/text/encoding",
+			"revision": "7922cc490dd5a7dbaa7fd5d6196b49db59ac042f",
+			"revisionTime": "2018-04-05T08:39:28Z"
+		},
+		{
+			"checksumSHA1": "HgcUFTOQF5jOYtTIj5obR3GVN9A=",
+			"path": "golang.org/x/text/encoding/charmap",
+			"revision": "7922cc490dd5a7dbaa7fd5d6196b49db59ac042f",
+			"revisionTime": "2018-04-05T08:39:28Z"
+		},
+		{
+			"checksumSHA1": "zeHyHebIZl1tGuwGllIhjfci+wI=",
+			"path": "golang.org/x/text/encoding/internal",
+			"revision": "7922cc490dd5a7dbaa7fd5d6196b49db59ac042f",
+			"revisionTime": "2018-04-05T08:39:28Z"
+		},
+		{
+			"checksumSHA1": "9cg4nSGfKTIWKb6bWV7U4lnuFKA=",
+			"path": "golang.org/x/text/encoding/internal/identifier",
+			"revision": "7922cc490dd5a7dbaa7fd5d6196b49db59ac042f",
+			"revisionTime": "2018-04-05T08:39:28Z"
+		},
+		{
+			"checksumSHA1": "f/PWjU17cU5uo0zkdi+Iz80Megk=",
+			"path": "golang.org/x/text/encoding/japanese",
+			"revision": "7922cc490dd5a7dbaa7fd5d6196b49db59ac042f",
+			"revisionTime": "2018-04-05T08:39:28Z"
+		},
+		{
+			"checksumSHA1": "55UdScb+EMOCPr7OW0hCwDsVxpg=",
+			"path": "golang.org/x/text/encoding/simplifiedchinese",
+			"revision": "7922cc490dd5a7dbaa7fd5d6196b49db59ac042f",
+			"revisionTime": "2018-04-05T08:39:28Z"
+		},
+		{
+			"checksumSHA1": "9EZF1SHTpjVmaT9sARitvGKUXOY=",
+			"path": "golang.org/x/text/encoding/traditionalchinese",
+			"revision": "7922cc490dd5a7dbaa7fd5d6196b49db59ac042f",
+			"revisionTime": "2018-04-05T08:39:28Z"
+		},
+		{
+			"checksumSHA1": "ziMb9+ANGRJSSIuxYdRbA+cDRBQ=",
+			"path": "golang.org/x/text/transform",
+			"revision": "7922cc490dd5a7dbaa7fd5d6196b49db59ac042f",
+			"revisionTime": "2018-04-05T08:39:28Z"
+		},
+		{
 			"checksumSHA1": "ZSWoOPUNRr5+3dhkLK3C4cZAQPk=",
 			"path": "gopkg.in/yaml.v2",
 			"revision": "5420a8b6744d3b0345ab293f6fcba19c978f1183",
