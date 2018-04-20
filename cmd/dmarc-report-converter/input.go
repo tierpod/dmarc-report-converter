@@ -10,7 +10,7 @@ import (
 	"github.com/tierpod/dmarc-report-converter/pkg/dmarc"
 )
 
-func readXML(i string) (dmarc.Report, error) {
+func readXML(i string, cfg *config) (dmarc.Report, error) {
 	file, err := os.Open(i)
 	if err != nil {
 		return dmarc.Report{}, err
@@ -25,7 +25,7 @@ func readXML(i string) (dmarc.Report, error) {
 	return d, nil
 }
 
-func readGZIP(i string) (dmarc.Report, error) {
+func readGZIP(i string, cfg *config) (dmarc.Report, error) {
 	file, err := os.Open(i)
 	if err != nil {
 		return dmarc.Report{}, err
@@ -46,7 +46,7 @@ func readGZIP(i string) (dmarc.Report, error) {
 	return d, nil
 }
 
-func readZIP(i string) (dmarc.Report, error) {
+func readZIP(i string, cfg *config) (dmarc.Report, error) {
 	r, err := zip.OpenReader(i)
 	if err != nil {
 		return dmarc.Report{}, err

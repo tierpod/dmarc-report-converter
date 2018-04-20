@@ -17,19 +17,19 @@ func convertFile(i string, cfg *config) error {
 
 	switch ext {
 	case ".gz":
-		report, err = readGZIP(i)
+		report, err = readGZIP(i, cfg)
 		if err != nil {
 			return err
 		}
 
 	case ".zip":
-		report, err = readZIP(i)
+		report, err = readZIP(i, cfg)
 		if err != nil {
 			return err
 		}
 
 	case ".xml":
-		report, err = readXML(i)
+		report, err = readXML(i, cfg)
 		if err != nil {
 			return err
 		}
