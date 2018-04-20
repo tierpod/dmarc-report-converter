@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 )
 
 var version string
@@ -30,32 +29,15 @@ func main() {
 		log.Fatalf("[ERROR] %v", err)
 	}
 
-	fmt.Printf("%+v\n", cfg)
-
-	inFiles, err := filepath.Glob(filepath.Join(cfg.Input.Dir, "*.*"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	if cfg.LookupAddr {
 		log.Printf("performs a reverse lookups, this may take some time")
 	}
 
-	log.Printf("found input files: %v", inFiles)
-	for _, f := range inFiles {
-		err = convertFile(f, cfg)
-		if err != nil {
-			log.Printf("[ERROR] %v, skip", err)
-			continue
-		}
+	if cfg.Input.Dir != "" {
+		processFiles(cfg)
+	}
 
-		if cfg.Input.Delete {
-			log.Printf("delete %v after converting", f)
-			err = os.Remove(f)
-			if err != nil {
-				log.Printf("[ERROR] %v, skip", err)
-				continue
-			}
-		}
+	if cfg.Input.IMAP.Server != "" {
+		processIMAP(cfg)
 	}
 }
