@@ -25,8 +25,8 @@ func newOutput(cfg *config) *output {
 func (o *output) do(d dmarc.Report) error {
 	var err error
 
-	// if config Output.Dir is set, choose output file name and open file for writing
-	if o.cfg.Output.Dir != "" {
+	// if config Output.File is set, choose output file name and open file for writing
+	if !o.cfg.Output.isStdout() {
 		// generate output filename from config filename template
 		var buf bytes.Buffer
 		err := o.cfg.Output.fileTemplate.Execute(&buf, d)
@@ -34,7 +34,7 @@ func (o *output) do(d dmarc.Report) error {
 			return err
 		}
 
-		file := filepath.Join(o.cfg.Output.Dir, buf.String())
+		file := buf.String()
 		dir := filepath.Dir(file)
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {

@@ -31,12 +31,19 @@ type IMAP struct {
 
 // Output is the output section of config
 type Output struct {
-	Dir          string `yaml:"dir"`
-	FileTemplate string `yaml:"file_template"`
+	File         string `yaml:"file"`
 	fileTemplate *template.Template
 	Format       string `yaml:"format"`
 	Template     string
 	template     *template.Template
+}
+
+func (o *Output) isStdout() bool {
+	if o.File == "" || o.File == "stdout" {
+		return true
+	}
+
+	return false
 }
 
 func loadTemplate(s string) *template.Template {
@@ -72,9 +79,11 @@ func loadConfig(path string) (*config, error) {
 		return nil, fmt.Errorf("unknown template for format %v", c.Output.Format)
 	}
 
-	// load and parse output filename template
-	ft := template.Must(template.New("filename").Parse(c.Output.FileTemplate))
-	c.Output.fileTemplate = ft
+	if !c.Output.isStdout() {
+		// load and parse output filename template
+		ft := template.Must(template.New("filename").Parse(c.Output.File))
+		c.Output.fileTemplate = ft
+	}
 
 	return &c, nil
 }
