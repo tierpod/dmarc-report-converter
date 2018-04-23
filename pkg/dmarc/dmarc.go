@@ -29,8 +29,8 @@ type ReportMetadata struct {
 
 // DateRange represents feedback>report_metadata>date_range section
 type DateRange struct {
-	Begin DateTime `xml:"begin" json:"begin"` // TODO: time
-	End   DateTime `xml:"end" json:"end"`     // TODO: time
+	Begin DateTime `xml:"begin" json:"begin"`
+	End   DateTime `xml:"end" json:"end"`
 }
 
 // DateTime is the custom time for DateRange.Begin and DateRange.End values
