@@ -14,7 +14,7 @@ func readConvert(r io.Reader, i string, cfg *config) error {
 	var err error
 
 	ext := filepath.Ext(i)
-	log.Printf("convert file %v, extension %v", i, ext)
+	log.Printf("[INFO] convert: file %v", i)
 
 	switch ext {
 	case ".gz":

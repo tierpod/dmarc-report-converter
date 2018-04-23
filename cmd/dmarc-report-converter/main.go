@@ -30,7 +30,7 @@ func main() {
 	}
 
 	if cfg.LookupAddr {
-		log.Printf("performs a reverse lookups, this may take some time")
+		log.Printf("[INFO] performs a reverse lookups, this may take some time")
 	}
 
 	if cfg.Input.Dir != "" {

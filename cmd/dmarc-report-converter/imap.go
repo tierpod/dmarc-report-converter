@@ -105,7 +105,7 @@ func processIMAP(cfg *config) {
 			}
 		}
 
-		log.Printf("[DEBUG] add SeqNum %v to delete set", msg.SeqNum)
+		log.Printf("[DEBUG] imap: add SeqNum %v to delete set", msg.SeqNum)
 		deleteSet.AddNum(msg.SeqNum)
 		doneCount++
 	}
@@ -116,7 +116,7 @@ func processIMAP(cfg *config) {
 	}
 
 	if cfg.Input.Delete {
-		log.Printf("delete emails after converting")
+		log.Printf("[DEBUG] imap: delete emails after converting")
 
 		delItems := imap.FormatFlagsOp(imap.AddFlags, false)
 		delFlags := []interface{}{imap.SeenFlag, imap.DeletedFlag}

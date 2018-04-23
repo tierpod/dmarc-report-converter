@@ -41,7 +41,7 @@ func (o *output) do(d dmarc.Report) error {
 			return nil
 		}
 
-		log.Printf("output to file %v\n", file)
+		log.Printf("[INFO] output: write to file %v", file)
 		f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return err

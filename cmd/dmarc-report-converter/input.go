@@ -51,12 +51,13 @@ func readZIP(r io.Reader, cfg *config) (dmarc.Report, error) {
 	}
 
 	for _, file := range zr.File {
-		if filepath.Ext(file.Name) != ".xml" {
-			log.Printf("[WARN] skip %v from zip: unknown extension\n", file.Name)
+		ext := filepath.Ext(file.Name)
+		if ext != ".xml" {
+			log.Printf("[WARN] input: skip %v from zip: unknown extension %v", file.Name, ext)
 			continue
 		}
 
-		log.Printf("read file %v from zip\n", file.Name)
+		log.Printf("[INFO] input: read file %v from zip", file.Name)
 
 		rr, err := file.Open()
 		if err != nil {
