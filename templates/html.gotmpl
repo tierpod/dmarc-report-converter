@@ -95,7 +95,7 @@ td.left-border, th.left-border
                             {{- end }}
                         </td>
                         <td class="left-border">{{.AuthResults.DKIM.Domain}}</td>
-                        <td>
+                        <td title="selector: {{.AuthResults.DKIM.Selector}}">
                             {{- if eq .AuthResults.DKIM.Result "pass"}}
                             <span class="badge badge-success">{{.AuthResults.DKIM.Result}}</span>
                             {{- else if eq .AuthResults.DKIM.Result "fail"}}
@@ -105,7 +105,7 @@ td.left-border, th.left-border
                             {{- end}}
                         </td>
                         <td>{{.AuthResults.SPF.Domain}}</td>
-                        <td>
+                        <td title="scope: {{.AuthResults.SPF.Scope}}">
                             {{- if eq .AuthResults.SPF.Result "pass"}}
                             <span class="badge badge-success">{{.AuthResults.SPF.Result}}</span>
                             {{- else if eq .AuthResults.SPF.Result "fail"}}

@@ -84,14 +84,22 @@ type Identifiers struct {
 
 // AuthResults represents feedback>record>auth_results section
 type AuthResults struct {
-	DKIM AuthResult `xml:"dkim" json:"dkim"`
-	SPF  AuthResult `xml:"spf" json:"spf"`
+	DKIM DKIMAuthResult `xml:"dkim" json:"dkim"`
+	SPF  SPFAuthResult  `xml:"spf" json:"spf"`
 }
 
-// AuthResult represnets feedback>record>auth_results>dkim and feedback>record>auth_results>spf sections
-type AuthResult struct {
+// DKIMAuthResult represnets feedback>record>auth_results>dkim sections
+type DKIMAuthResult struct {
+	Domain   string `xml:"domain" json:"domain"`
+	Result   string `xml:"result" json:"result"`
+	Selector string `xml:"selector" json:"selector"`
+}
+
+// SPFAuthResult represnets feedback>record>auth_results>spf section
+type SPFAuthResult struct {
 	Domain string `xml:"domain" json:"domain"`
 	Result string `xml:"result" json:"result"`
+	Scope  string `xml:"scope" json:"scope"`
 }
 
 // Parse parses input xml bytes to Report struct. If lookupAddr is true, performs a reverse
