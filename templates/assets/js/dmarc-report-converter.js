@@ -3,17 +3,17 @@ $(document).ready(function(){
 
     var data = [];
     var labels = [];
-    var auth_result_pass = 0;
-    var auth_result_fail = 0;
+    var policy_evaluated_result_pass = 0;
+    var policy_evaluated_result_fail = 0;
 
     $('#items-table tbody tr').each(function() {
         // count pass and fail auth results
         var msgc = parseInt($(this).find('#msgc').text());
 
-        if ($(this).hasClass('auth-result-pass')) {
-            auth_result_pass = auth_result_pass + msgc;
+        if ($(this).hasClass('policy-evaluated-result-pass')) {
+            policy_evaluated_result_pass = policy_evaluated_result_pass + msgc;
         } else {
-            auth_result_fail = auth_result_fail + msgc;
+            policy_evaluated_result_fail = policy_evaluated_result_fail + msgc;
         }
 
         var hostname = $(this).find('#hostname').text();
@@ -67,7 +67,7 @@ $(document).ready(function(){
             labels: ['pass', 'fail'],
             datasets: [{
                 label: 'stats',
-                data: [auth_result_pass, auth_result_fail],
+                data: [policy_evaluated_result_pass, policy_evaluated_result_fail],
                 backgroundColor: [
                     'rgba(44, 160, 44, 0.6)',
                     'rgba(214, 39, 40, 0.6)',
