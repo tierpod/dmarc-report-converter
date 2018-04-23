@@ -12,6 +12,16 @@ td.left-border, th.left-border
 {
     border-left: 1px solid #dee2e6;
 }
+
+.borderless td, .borderless th
+{
+    border: none;
+}
+
+table.table.bottomless
+{
+    margin-bottom: 0rem;
+}
 </style>
 </head>
 
@@ -21,24 +31,36 @@ td.left-border, th.left-border
     <script src="./assets/js/Chart.min.js"></script>
     <script src="./assets/js/dmarc-report-converter.js"></script>
 
-    <nav class="navbar navbar-dark bg-dark">
-        <a class="navbar-brand" href="#" id="navbar-title">
-            DMARC report with id {{.ReportMetadata.ReportID}} (period {{.ReportMetadata.DateRange.Begin}}-{{.ReportMetadata.DateRange.End}})
-        </a>
-    </nav>
-
+    <p></p>
     <div class="container">
-        <p></p>
         <div class="row">
             <div class="col">
-                <div class="alert alert-primary" role="alert">
-                from {{.ReportMetadata.OrgName}} ({{.ReportMetadata.Email}})
-                </div>
-                <div class="alert alert-success" role="alert">
-                Policy published for {{.PolicyPublished.Domain}}: p={{.PolicyPublished.Policy}} pct={{.PolicyPublished.Pct}} adkim={{.PolicyPublished.ADKIM}} aspf={{.PolicyPublished.ASPF}}
+                <div class="card">
+                    <div class="card-header">
+                        DMARC Report, id {{.ReportMetadata.ReportID}}
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm borderless bottomless">
+                            <tbody>
+                                <tr>
+                                    <td>Organization</td>
+                                    <td><a href="{{.ReportMetadata.ExtraContactInfo}}">{{.ReportMetadata.OrgName}}</a> ({{.ReportMetadata.Email}})</td>
+                                </tr>
+                                <tr>
+                                    <td>Date range</td>
+                                    <td>from {{.ReportMetadata.DateRange.Begin.UTC}} to {{.ReportMetadata.DateRange.End.UTC}}</td>
+                                </tr>
+                                <tr>
+                                    <td>Policy published</td>
+                                    <td>{{.PolicyPublished.Domain}}: p={{.PolicyPublished.Policy}} sp={{.PolicyPublished.SPolicy}} pct={{.PolicyPublished.Pct}} adkim={{.PolicyPublished.ADKIM}} aspf={{.PolicyPublished.ASPF}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
+        <p></p>
         <div class="row">
             <div class="col">
                 <canvas id="hosts-chart"></canvas>
@@ -47,9 +69,10 @@ td.left-border, th.left-border
                 <canvas id="stats-chart"></canvas>
             </div>
         </div>
+        <p></p>
         <div class="row">
             <div class="col">
-                <table class="table table-striped table-sm" id="items-table">
+                <table class="table table-striped table-bordered table-sm" id="items-table">
                     <thead>
                         <tr>
                         <th scope="col" colspan="3"></th>
@@ -58,8 +81,8 @@ td.left-border, th.left-border
                         </tr>
                         <tr>
                         <th scope="col">ip</th>
-                        <th scope="col" data-toggle="tooltip" data-placement="top" title="ptr records">hostname</th>
-                        <th scope="col" data-toggle="tooltip" data-placement="top" title="messages count">msgs</th>
+                        <th scope="col" data-toggle="tooltip" title="ptr records">hostname</th>
+                        <th scope="col" data-toggle="tooltip" title="messages count">msgs</th>
                         <th scope="col" class="left-border">disposition</th>
                         <th scope="col">DKIM</th>
                         <th scope="col">SPF</th>
