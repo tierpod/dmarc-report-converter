@@ -44,6 +44,10 @@ Installation
 ```bash
 go get -u https://github.com/tierpod/dmarc-report-converter.git
 cd dmarc-report-converter
-make dmarc-report-converter
-# edit config.yaml and templates/*.tmpl if needed
+make bin/dmarc-report-converter
+# install bin/dmarc-report-converter executable to /opt/dmarc-report-converter, and cron job to /etc/cron.daily
+sudo make install
+# edit /opt/dmarc-report-converter/ config.yaml and templates/*.gotmpl if needed
+# put html assets to your web server
+# add to crontab daily job: /etc/cron.daily/dmarc-report-converter
 ```
