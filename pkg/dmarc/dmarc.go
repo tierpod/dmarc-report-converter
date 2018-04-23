@@ -3,6 +3,7 @@ package dmarc
 
 import (
 	"encoding/xml"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -10,12 +11,22 @@ import (
 	"time"
 )
 
+// ReportIDDateTime is the DateTime format for Report.FileName
+const ReportIDDateTime = "2006-01-02"
+
 // Report represents root of dmarc report struct
 type Report struct {
 	XMLName         xml.Name        `xml:"feedback" json:"feedback"`
 	ReportMetadata  ReportMetadata  `xml:"report_metadata" json:"report_metadata"`
 	PolicyPublished PolicyPublished `xml:"policy_published" json:"policy_published"`
 	Record          []Record        `xml:"record" json:"record"`
+}
+
+// ID returns report identifier in format YEAR-MONTH-DAY-DOMAIN/EMAIL-ID (can be used in config to
+// calculate filename)
+func (r Report) ID() string {
+	d := r.ReportMetadata.DateRange.Begin.Format(ReportIDDateTime)
+	return fmt.Sprintf("%v-%v/%v-%v", d, r.PolicyPublished.Domain, r.ReportMetadata.Email, r.ReportMetadata.ReportID)
 }
 
 // ReportMetadata represents feedback>report_metadata section

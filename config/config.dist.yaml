@@ -9,7 +9,8 @@ input:
 
 output:
   # template for output file path or "stdout"
-  file: "/tmp/html/{{ .ReportMetadata.Email }}/{{ .PolicyPublished.Domain }}!{{.ReportMetadata.DateRange.Begin}}!{{ .ReportMetadata.ReportID }}.html"
+  file: "/tmp/html/{{ .ID }}.html"
+  # file: "/tmp/html/{{ .ReportMetadata.Email }}/{{ .PolicyPublished.Domain }}!{{.ReportMetadata.DateRange.Begin}}!{{ .ReportMetadata.ReportID }}.html"
   # txt, json, html
   format: "html"
 
