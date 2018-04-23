@@ -20,10 +20,11 @@ type Report struct {
 
 // ReportMetadata represents feedback>report_metadata section
 type ReportMetadata struct {
-	OrgName   string    `xml:"org_name" json:"org_name"`
-	Email     string    `xml:"email" json:"email"`
-	ReportID  string    `xml:"report_id" json:"report_id"`
-	DateRange DateRange `xml:"date_range" json:"date_range"`
+	OrgName          string    `xml:"org_name" json:"org_name"`
+	Email            string    `xml:"email" json:"email"`
+	ExtraContactInfo string    `xml:"extra_contact_info" json:"extra_contact_info"`
+	ReportID         string    `xml:"report_id" json:"report_id"`
+	DateRange        DateRange `xml:"date_range" json:"date_range"`
 }
 
 // DateRange represents feedback>report_metadata>date_range section
@@ -48,11 +49,12 @@ func (t *DateTime) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 
 // PolicyPublished represents feedback>policy_published section
 type PolicyPublished struct {
-	Domain string `xml:"domain" json:"domain"`
-	ADKIM  string `xml:"adkim" json:"adkim"`
-	ASPF   string `xml:"aspf" json:"aspf"`
-	Policy string `xml:"p" json:"p"`
-	Pct    string `xml:"pct" json:"pct"`
+	Domain  string `xml:"domain" json:"domain"`
+	ADKIM   string `xml:"adkim" json:"adkim"`
+	ASPF    string `xml:"aspf" json:"aspf"`
+	Policy  string `xml:"p" json:"p"`
+	SPolicy string `xml:"sp" json:"sp"`
+	Pct     string `xml:"pct" json:"pct"`
 }
 
 // Record represents feedback>record section
