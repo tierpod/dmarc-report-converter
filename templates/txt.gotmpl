@@ -1,6 +1,6 @@
 DMARC report with id {{.ReportMetadata.ReportID}}
   Organization:     {{.ReportMetadata.ExtraContactInfo}} ({{.ReportMetadata.Email}}))
-  Date range:       {{.ReportMetadata.DateRange.Begin.UTC}}-{{.ReportMetadata.DateRange.End.UTC}}
+  Date range:       since {{.ReportMetadata.DateRange.Begin.UTC}} until {{.ReportMetadata.DateRange.End.UTC}}
   Policy published: {{.PolicyPublished.Domain}}: p={{.PolicyPublished.Policy}} sp={{.PolicyPublished.SPolicy}} pct={{.PolicyPublished.Pct}} adkim={{.PolicyPublished.ADKIM}} aspf={{.PolicyPublished.ASPF}}
 ------------------------------------------------------------------------------------------------------------------------
 {{printf "%23v | %32v | %57v |" "" "policy evaluated" "auth results" }}
