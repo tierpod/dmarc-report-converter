@@ -1,13 +1,16 @@
 DMARC report with id {{.ReportMetadata.ReportID}}
-  from {{.ReportMetadata.OrgName}} ({{.ReportMetadata.Email}})
-  period {{.ReportMetadata.DateRange.Begin}}-{{.ReportMetadata.DateRange.End}}
-
-Policy published for {{.PolicyPublished.Domain}}: p={{.PolicyPublished.Policy}} pct={{.PolicyPublished.Pct}} adkim={{.PolicyPublished.ADKIM}} aspf={{.PolicyPublished.ASPF}}
+  Organization:     {{.ReportMetadata.ExtraContactInfo}} ({{.ReportMetadata.Email}}))
+  Date range:       {{.ReportMetadata.DateRange.Begin.UTC}}-{{.ReportMetadata.DateRange.End.UTC}}
+  Policy published: {{.PolicyPublished.Domain}}: p={{.PolicyPublished.Policy}} sp={{.PolicyPublished.SPolicy}} pct={{.PolicyPublished.Pct}} adkim={{.PolicyPublished.ADKIM}} aspf={{.PolicyPublished.ASPF}}
 ------------------------------------------------------------------------------------------------------------------------
 {{printf "%23v | %32v | %57v |" "" "policy evaluated" "auth results" }}
 ------------------------------------------------------------------------------------------------------------------------
-{{printf "%16v | %4v | %10v | %8v | %8v | %16v | %8v | %16v | %8v | %v" "ip"          "msg"      "disp"                           "dkim r"                  "spf r"                  "dkim domain"            "dkim rt"               "spf domain"            "spf r"                  "hostname"         }}
+{{printf "%16v | %4v | %10v | %8v | %8v | %16v | %8v | %16v | %8v | %v" "ip"          "msgs"     "disp"                           "dkim"                    "spf"                    "dkim domain"            "dkim res"               "spf domain"            "spf res"               "hostname"         }}
 ------------------------------------------------------------------------------------------------------------------------
 {{- range .Record }}
-{{printf "%16v | %4v | %10v | %8v | %8v | %16v | %8v | %16v | %8v | %v" .Row.SourceIP .Row.Count .Row.PolicyEvaluated.Disposition .Row.PolicyEvaluated.DKIM .Row.PolicyEvaluated.SPF .AuthResults.DKIM.Domain .AuthResults.DKIM.Result .AuthResults.SPF.Domain .AuthResults.SPF.Result .Row.SourceHostname}}
+{{- if and (eq .Row.PolicyEvaluated.DKIM "pass") (eq .Row.PolicyEvaluated.SPF "pass") }}
+{{ printf "* %14v | %4v | %10v | %8v | %8v | %16v | %8v | %16v | %8v | %v" .Row.SourceIP .Row.Count .Row.PolicyEvaluated.Disposition .Row.PolicyEvaluated.DKIM .Row.PolicyEvaluated.SPF .AuthResults.DKIM.Domain .AuthResults.DKIM.Result .AuthResults.SPF.Domain .AuthResults.SPF.Result .Row.SourceHostname}}
+{{- else }}
+{{ printf "%16v | %4v | %10v | %8v | %8v | %16v | %8v | %16v | %8v | %v" .Row.SourceIP .Row.Count .Row.PolicyEvaluated.Disposition .Row.PolicyEvaluated.DKIM .Row.PolicyEvaluated.SPF .AuthResults.DKIM.Domain .AuthResults.DKIM.Result .AuthResults.SPF.Domain .AuthResults.SPF.Result .Row.SourceHostname}}
+{{- end}}
 {{- end }}
