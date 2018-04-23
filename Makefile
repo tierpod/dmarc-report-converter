@@ -1,8 +1,7 @@
-BINARIES  := bin/dmarc-report-converter
-
-VERSION := $(shell git describe --tags)
-
-LDFLAGS := -ldflags "-X main.version=$(VERSION)"
+BINARIES := bin/dmarc-report-converter
+DESTDIR  := /opt
+VERSION  := $(shell git describe --tags)
+LDFLAGS  := -ldflags "-X main.version=$(VERSION)"
 
 .PHONY: lint
 lint:
@@ -26,3 +25,17 @@ clean:
 .PHONY: doc
 doc:
 	godoc -http :6060
+
+.PHONY: install
+install: $(DESTDIR)/dmarc-report-converter
+	install -m 0755 bin/dmarc-report-converter $(DESTDIR)/dmarc-report-converter
+	install -m 0600 config/config.dist.yaml $(DESTDIR)/dmarc-report-converter/config.dist.yaml
+	install install/dmarc-report-converter.cron /etc/cron.daily/
+
+$(DESTDIR)/dmarc-report-converter:
+	mkdir -p $@
+
+.PHONY: uninstall
+uninstall:
+	rm -rf $(DESTDIR)/dmarc-report-converter
+	rm -f /etc/cron.daily/dmarc-report-converter.cron
