@@ -19,7 +19,7 @@ Support inputs:
 
 Support output formats:
 
-* **html** output file is the html, generated from tamplate templates/html.gotmpl
+* **html** output file is the html, generated from template templates/html.gotmpl
 
 * **txt** output file is the plain text, generated from template templates/txt.gotmpl
 
