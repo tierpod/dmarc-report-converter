@@ -118,11 +118,18 @@ func processIMAP(cfg *config) {
 	if cfg.Input.Delete {
 		log.Printf("[DEBUG] imap: delete emails after converting")
 
+		// first, mark the messages as seen and deleted
 		delItems := imap.FormatFlagsOp(imap.AddFlags, false)
 		delFlags := []interface{}{imap.SeenFlag, imap.DeletedFlag}
 
 		err := c.Store(deleteSet, delItems, delFlags, nil)
 		if err != nil {
+			log.Printf("[ERROR] imap: %v", err)
+			return
+		}
+
+		// then delete it
+		if err := c.Expunge(nil); err != nil {
 			log.Printf("[ERROR] imap: %v", err)
 			return
 		}
