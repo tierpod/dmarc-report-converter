@@ -1,3 +1,4 @@
+// Convert dmarc reports from xml to human-readable formats
 package main
 
 import (

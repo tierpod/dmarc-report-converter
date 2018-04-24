@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// ReportIDDateTime is the DateTime format for Report.FileName
+// ReportIDDateTime is the DateTime format for Report.ID
 const ReportIDDateTime = "2006-01-02"
 
 // Report represents root of dmarc report struct
