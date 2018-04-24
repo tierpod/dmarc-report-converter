@@ -48,4 +48,4 @@ uninstall:
 release/dmarc-report-converter_linux_amd64.tar.gz:
 	mkdir -p release
 	make DESTDIR=./tmp install
-	tar -cvzf $@ -C ./tmp dmarc-report-converter
+	tar -cvzf $@ --owner=0 --group=0 -C ./tmp dmarc-report-converter
