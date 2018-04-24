@@ -51,3 +51,11 @@ sudo make install
 # put html assets to your web server
 # add to crontab daily job: /etc/cron.daily/dmarc-report-converter
 ```
+
+Thanks
+------
+
+* [bootstrap](https://getbootstrap.com/)
+* [jquery](http://jquery.com/)
+* [ChartJS](http://chartjs.org/)
+* [golang emersion packages](https://github.com/emersion) (go-imap, go-message, go-sasl, go-textwrapper)
