@@ -92,7 +92,8 @@ type PolicyEvaluated struct {
 
 // Identifiers represents feedback>record>identifiers section
 type Identifiers struct {
-	HeaderFrom string `xml:"header_from" json:"header_from"`
+	HeaderFrom   string `xml:"header_from" json:"header_from"`
+	EnvelopeFrom string `xml:"envelope_from" json:"envelope_from"`
 }
 
 // AuthResults represents feedback>record>auth_results section
