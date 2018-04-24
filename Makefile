@@ -28,12 +28,14 @@ clean:
 doc:
 	godoc -http :6060
 
-.PHONY: install
+.PHONY: install install
 install: $(INSTALLDIR) $(INSTALLDIR)/templates
 	install -m 0755 bin/dmarc-report-converter $(INSTALLDIR)
 	install -m 0600 config/config.dist.yaml $(INSTALLDIR)/config.dist.yaml
 	cp -r templates $(INSTALLDIR)
-	install install/dmarc-report-converter.cron /etc/cron.daily/
+
+/etc/cron.daily/install/dmarc-report-converter.cron:
+	install install/dmarc-report-converter.cron $@
 
 $(INSTALLDIR) $(INSTALLDIR)/templates:
 	mkdir -p $@
@@ -42,3 +44,8 @@ $(INSTALLDIR) $(INSTALLDIR)/templates:
 uninstall:
 	rm -rf $(DESTDIR)/dmarc-report-converter
 	rm -f /etc/cron.daily/dmarc-report-converter.cron
+
+release/dmarc-report-converter_linux_amd64.tar.gz:
+	mkdir -p release
+	make DESTDIR=./tmp install
+	tar -cvzf $@ -C ./tmp dmarc-report-converter

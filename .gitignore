@@ -1,4 +1,5 @@
 *.swp
 *.retry
-bin
-tmp
+/bin
+/tmp
+/release
