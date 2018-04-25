@@ -18,19 +18,19 @@ func readConvert(r io.Reader, i string, cfg *config) error {
 
 	switch ext {
 	case ".gz":
-		report, err = readGZIP(r, cfg)
+		report, err = dmarc.ReadParseGZIP(r, cfg.LookupAddr)
 		if err != nil {
 			return err
 		}
 
 	case ".zip":
-		report, err = readZIP(r, cfg)
+		report, err = dmarc.ReadParseZIP(r, cfg.LookupAddr)
 		if err != nil {
 			return err
 		}
 
 	case ".xml":
-		report, err = readXML(r, cfg)
+		report, err = dmarc.ReadParseXML(r, cfg.LookupAddr)
 		if err != nil {
 			return err
 		}

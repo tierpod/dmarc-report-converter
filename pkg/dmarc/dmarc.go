@@ -1,11 +1,9 @@
-// Package dmarc contains xml parser
+// Package dmarc contains reader and parser for DMARC xml reports.
 package dmarc
 
 import (
 	"encoding/xml"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net"
 	"sort"
 	"time"
@@ -116,7 +114,7 @@ type SPFAuthResult struct {
 	Scope  string `xml:"scope" json:"scope"`
 }
 
-// Parse parses input xml bytes to Report struct. If lookupAddr is true, performs a reverse
+// Parse parses input xml data b to Report struct. If lookupAddr is true, performs a reverse
 // lookups for feedback>record>row>source_ip
 func Parse(b []byte, lookupAddr bool) (Report, error) {
 	var result Report
@@ -134,22 +132,6 @@ func Parse(b []byte, lookupAddr bool) (Report, error) {
 	}
 
 	return result, nil
-}
-
-// ReadParse reads input xml bytes from reader and parses it to Report struct. If lookupAddr is
-// true, performs a reverse lookups for feedback>record>row>source_ip
-func ReadParse(r io.Reader, lookupAddr bool) (Report, error) {
-	data, err := ioutil.ReadAll(r)
-	if err != nil {
-		return Report{}, err
-	}
-
-	report, err := Parse(data, lookupAddr)
-	if err != nil {
-		return Report{}, err
-	}
-
-	return report, nil
 }
 
 func doPTRlookup(r *Report) error {
