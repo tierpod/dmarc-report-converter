@@ -94,7 +94,7 @@ table.table.bottomless
                     </thead>
                     <tbody id="items-table">
                         {{- range .Record }}
-                        {{- if and (eq .Row.PolicyEvaluated.DKIM "pass") (eq .Row.PolicyEvaluated.SPF "pass") }}
+                        {{- if or (eq .Row.PolicyEvaluated.DKIM "pass") (eq .Row.PolicyEvaluated.SPF "pass") }}
                         <tr class="policy-evaluated-result-pass table-success">
                         {{- else }}
                         <tr class="policy-evaluated-result-fail">
