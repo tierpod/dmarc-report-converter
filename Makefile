@@ -21,6 +21,7 @@ $(BINARIES):
 .PHONY: clean
 clean:
 	rm -f bin/*
+	rm -f release/*.tar.gz
 	rm -f install/*.retry
 	rm -f ./pprof
 
@@ -45,7 +46,7 @@ uninstall:
 	rm -rf $(DESTDIR)/dmarc-report-converter
 	rm -f /etc/cron.daily/dmarc-report-converter.cron
 
-release/dmarc-report-converter_linux_amd64.tar.gz:
+release/dmarc-report-converter_linux_amd64.tar.gz: $(BINARIES)
 	mkdir -p release
 	make DESTDIR=./tmp install
 	tar -cvzf $@ --owner=0 --group=0 -C ./tmp dmarc-report-converter
