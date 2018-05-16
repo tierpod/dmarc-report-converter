@@ -13,6 +13,7 @@ output:
   # file: "/tmp/html/{{ .ReportMetadata.Email }}/{{ .PolicyPublished.Domain }}!{{.ReportMetadata.DateRange.Begin}}!{{ .ReportMetadata.ReportID }}.html"
   # txt, json, html
   format: "html"
+  assets_path: "./assets"
 
 # perform reverse lookups?
 lookup_addr: no

@@ -51,8 +51,10 @@ func (o *output) do(d dmarc.Report) error {
 	}
 
 	switch o.cfg.Output.Format {
-	case "txt", "html":
+	case "txt":
 		err = o.template(d)
+	case "html":
+		err = o.templateHTML(d)
 	case "json":
 		err = o.json(d)
 	default:
@@ -64,6 +66,20 @@ func (o *output) do(d dmarc.Report) error {
 
 func (o *output) template(d dmarc.Report) error {
 	err := o.cfg.Output.template.Execute(o.w, d)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o *output) templateHTML(d dmarc.Report) error {
+	data := struct {
+		AssetsPath string
+		Report     dmarc.Report
+	}{o.cfg.Output.AssetsPath, d}
+
+	err := o.cfg.Output.template.Execute(o.w, data)
 	if err != nil {
 		return err
 	}

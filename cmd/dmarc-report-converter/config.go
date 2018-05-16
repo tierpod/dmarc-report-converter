@@ -36,6 +36,7 @@ type Output struct {
 	Format       string `yaml:"format"`
 	Template     string
 	template     *template.Template
+	AssetsPath   string `yaml:"assets_path"`
 }
 
 func (o *Output) isStdout() bool {

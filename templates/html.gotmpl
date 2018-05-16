@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap core CSS -->
-    <link href="./assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{.AssetsPath}}/css/bootstrap.min.css" rel="stylesheet">
 <style>
 td.left-border, th.left-border
 {
@@ -26,10 +26,10 @@ table.table.bottomless
 </head>
 
 <body>
-    <script src="./assets/js/jquery-3.3.1.min.js"></script>
-    <script src="./assets/js/bootstrap.min.js"></script>
-    <script src="./assets/js/Chart.min.js"></script>
-    <script src="./assets/js/dmarc-report-converter.js"></script>
+    <script src="{{.AssetsPath}}/js/jquery-3.3.1.min.js"></script>
+    <script src="{{.AssetsPath}}/js/bootstrap.min.js"></script>
+    <script src="{{.AssetsPath}}/js/Chart.min.js"></script>
+    <script src="{{.AssetsPath}}/js/dmarc-report-converter.js"></script>
 
     <p></p>
     <div class="container">
@@ -37,22 +37,22 @@ table.table.bottomless
             <div class="col">
                 <div class="card">
                     <div class="card-header">
-                        DMARC Report, id {{.ReportMetadata.ReportID}}
+                        DMARC Report, id {{.Report.ReportMetadata.ReportID}}
                     </div>
                     <div class="card-body">
                         <table class="table table-sm borderless bottomless">
                             <tbody>
                                 <tr>
                                     <td>Organization</td>
-                                    <td><a href="{{.ReportMetadata.ExtraContactInfo}}">{{.ReportMetadata.OrgName}}</a> ({{.ReportMetadata.Email}})</td>
+                                    <td><a href="{{.Report.ReportMetadata.ExtraContactInfo}}">{{.Report.ReportMetadata.OrgName}}</a> ({{.Report.ReportMetadata.Email}})</td>
                                 </tr>
                                 <tr>
                                     <td>Date range</td>
-                                    <td>since {{.ReportMetadata.DateRange.Begin.UTC}} until {{.ReportMetadata.DateRange.End.UTC}}</td>
+                                    <td>since {{.Report.ReportMetadata.DateRange.Begin.UTC}} until {{.Report.ReportMetadata.DateRange.End.UTC}}</td>
                                 </tr>
                                 <tr>
                                     <td>Policy published</td>
-                                    <td>{{.PolicyPublished.Domain}}: p={{.PolicyPublished.Policy}} sp={{.PolicyPublished.SPolicy}} pct={{.PolicyPublished.Pct}} adkim={{.PolicyPublished.ADKIM}} aspf={{.PolicyPublished.ASPF}}</td>
+                                    <td>{{.Report.PolicyPublished.Domain}}: p={{.Report.PolicyPublished.Policy}} sp={{.Report.PolicyPublished.SPolicy}} pct={{.Report.PolicyPublished.Pct}} adkim={{.Report.PolicyPublished.ADKIM}} aspf={{.Report.PolicyPublished.ASPF}}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -93,7 +93,7 @@ table.table.bottomless
                         </tr>
                     </thead>
                     <tbody id="items-table">
-                        {{- range .Record }}
+                        {{- range .Report.Record }}
                         {{- if or (eq .Row.PolicyEvaluated.DKIM "pass") (eq .Row.PolicyEvaluated.SPF "pass") }}
                         <tr class="policy-evaluated-result-pass table-success">
                         {{- else }}
