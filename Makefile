@@ -2,8 +2,8 @@ BINARIES   := bin/dmarc-report-converter
 DESTDIR    := /opt
 INSTALLDIR := $(DESTDIR)/dmarc-report-converter
 
-VERSION    := $(shell git describe --tags)
-LDFLAGS    := -ldflags "-X main.version=$(VERSION)"
+GIT_VER    := $(shell git describe --abbrev=7 --always --tags)-$(shell git rev-parse --abbrev-ref HEAD)-$(shell date +%Y%m%d)
+LDFLAGS    := -ldflags "-X main.version=$(GIT_VER)"
 
 .PHONY: lint
 lint:
