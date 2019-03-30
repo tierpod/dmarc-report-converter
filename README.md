@@ -41,16 +41,26 @@ Copy config/config.dist.yaml to config.yaml and change parameters:
 Installation
 ------------
 
-```bash
-go get -u https://github.com/tierpod/dmarc-report-converter.git
-cd dmarc-report-converter
-make bin/dmarc-report-converter
-# install bin/dmarc-report-converter executable to /opt/dmarc-report-converter, and cron job to /etc/cron.daily
-sudo make install
-# edit /opt/dmarc-report-converter/ config.yaml and templates/*.gotmpl if needed
-# put html assets to your web server
-# add to crontab daily job: /etc/cron.daily/dmarc-report-converter
-```
+1. download pre-builded archive from releases or build dmarc-report-converter executable:
+  ```bash
+  go get -u github.com/tierpod/dmarc-report-converter
+  cd $HOME/go/src/github.com/tierpod/dmarc-report-converter
+  make bin/dmarc-report-converter
+  ```
+
+  now you can run ./bin/dmarc-report-converter and test it
+
+2. copy bin/dmarc-report-converter executable to installation directory (for example, /opt/dmarc-report-converter)
+
+3. copy config/config.dist.yaml to installation directory, rename it and edit
+
+4. copy templates directory to installation directory, edit if necessery
+  ```bash
+  # steps 2-4:
+  sudo make install
+  ```
+
+5. add crontab daily job or systemd service unit + systemd timer unit (see examples in "install" directory)
 
 Thanks
 ------
