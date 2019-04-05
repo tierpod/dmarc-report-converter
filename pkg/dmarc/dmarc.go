@@ -73,6 +73,11 @@ type Record struct {
 	AuthResults AuthResults `xml:"auth_results" json:"auth_results"`
 }
 
+// IsPass returns true if DKIM or SPF policies are passed
+func (r *Record) IsPass() bool {
+	return (r.Row.PolicyEvaluated.DKIM == "pass" || r.Row.PolicyEvaluated.SPF == "pass")
+}
+
 // Row represents feedback>record>row section
 type Row struct {
 	SourceIP        string          `xml:"source_ip" json:"source_ip"`
