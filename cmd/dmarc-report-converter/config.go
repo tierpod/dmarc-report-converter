@@ -12,6 +12,7 @@ type config struct {
 	Input      Input  `yaml:"input"`
 	Output     Output `yaml:"output"`
 	LookupAddr bool   `yaml:"lookup_addr"`
+	ImapDebug  bool   `yaml:"imap_debug"`
 }
 
 // Input is the input section of config

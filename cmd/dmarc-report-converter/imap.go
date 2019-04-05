@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"log"
+	"os"
 
 	imap "github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
@@ -19,6 +20,11 @@ func processIMAP(cfg *config) {
 	}
 	log.Printf("[DEBUG] imap: connected")
 	defer c.Logout()
+
+	if cfg.ImapDebug {
+		log.Printf("[DEBUG] imap: enable debug")
+		c.SetDebug(os.Stdout)
+	}
 
 	// login
 	err = c.Login(cfg.Input.IMAP.Username, cfg.Input.IMAP.Password)
