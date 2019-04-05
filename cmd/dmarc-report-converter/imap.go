@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -9,6 +11,15 @@ import (
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-message/mail"
 )
+
+type bufferMessage struct {
+	buf      []byte
+	filename string
+}
+
+func (bm *bufferMessage) reader() io.Reader {
+	return bytes.NewReader(bm.buf)
+}
 
 func processIMAP(cfg *config) {
 	log.Printf("[INFO] imap: connecting to server %v", cfg.Input.IMAP.Server)
@@ -48,7 +59,7 @@ func processIMAP(cfg *config) {
 	from := uint32(1)
 	to := mbox.Messages
 
-	log.Printf("[INFO] imap: found messages %v, unseen %v", mbox.Messages, mbox.Unseen)
+	log.Printf("[INFO] imap: found %v messages, %v unseen", mbox.Messages, mbox.Unseen)
 
 	// set for all messages
 	seqSet := new(imap.SeqSet)
@@ -68,7 +79,8 @@ func processIMAP(cfg *config) {
 		done <- c.Fetch(seqSet, items, messages)
 	}()
 
-	doneCount := 0
+	var bufferMessages []bufferMessage
+	downloadCount := 0
 	for msg := range messages {
 		if msg == nil {
 			log.Printf("[ERROR] imap: server didn't returned message")
@@ -102,19 +114,21 @@ func processIMAP(cfg *config) {
 				// this is an attachment
 				filename, _ := h.Filename()
 				log.Printf("[INFO] imap: found attachment: %v", filename)
-
-				err = readConvert(p.Body, filename, cfg)
+				// download to buffer to prevent long imap connection
+				buf, err := ioutil.ReadAll(p.Body)
 				if err != nil {
 					log.Printf("[ERROR] imap: %v, skip", err)
 					continue
 				}
+				bufferMessages = append(bufferMessages, bufferMessage{buf, filename})
 			}
 		}
 
 		log.Printf("[DEBUG] imap: add SeqNum %v to delete set", msg.SeqNum)
 		deleteSet.AddNum(msg.SeqNum)
-		doneCount++
+		downloadCount++
 	}
+	log.Printf("[DEBUG] imap: %v attachments downloaded", downloadCount)
 
 	if err := <-done; err != nil {
 		log.Printf("[ERROR] imap: %v", err)
@@ -141,5 +155,19 @@ func processIMAP(cfg *config) {
 		}
 	}
 
-	log.Printf("[INFO] imap: done %v items", doneCount)
+	log.Printf("[DEBUG] imap: logout")
+	if err := c.Logout(); err != nil {
+		log.Printf("[ERROR] imap: logout error %v", err)
+	}
+
+	doneCount := 0
+	for _, bm := range bufferMessages {
+		err = readConvert(bm.reader(), bm.filename, cfg)
+		if err != nil {
+			log.Printf("[ERROR] imap: %v, skip", err)
+			continue
+		}
+		doneCount++
+	}
+	log.Printf("[INFO] imap: %v files converted", doneCount)
 }
