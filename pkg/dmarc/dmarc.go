@@ -23,6 +23,16 @@ type Report struct {
 	TotalPassed     int             `json:"_total_passed"`
 }
 
+// TotalMessages calculates total amount of messages
+func (r *Report) TotalMessages() int {
+	total := 0
+	for _, record := range r.Record {
+		total = total + record.Row.Count
+	}
+
+	return total
+}
+
 // ID returns report identifier in format YEAR-MONTH-DAY-DOMAIN/EMAIL-ID (can be used in config to
 // calculate filename)
 func (r Report) ID() string {
@@ -137,14 +147,14 @@ func Parse(b []byte, lookupAddr bool) (Report, error) {
 	})
 
 	// count all counters
+	result.Total = result.TotalMessages()
 	for i, record := range result.Record {
 		result.Record[i].IsPassed = record.IsPass()
-		result.Total = len(result.Record)
-		if record.IsPass() {
-			result.TotalPassed = result.TotalPassed + 1
+		if result.Record[i].IsPassed {
+			result.TotalPassed = result.TotalPassed + record.Row.Count
 		}
-		result.TotalFailed = result.Total - result.TotalPassed
 	}
+	result.TotalFailed = result.Total - result.TotalPassed
 
 	if lookupAddr {
 		doPTRlookup(&result)
