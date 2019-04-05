@@ -18,6 +18,9 @@ type Report struct {
 	ReportMetadata  ReportMetadata  `xml:"report_metadata" json:"report_metadata"`
 	PolicyPublished PolicyPublished `xml:"policy_published" json:"policy_published"`
 	Record          []Record        `xml:"record" json:"record"`
+	Total           int             `json:"_total"`
+	TotalFailed     int             `json:"_total_failed"`
+	TotalPassed     int             `json:"_total_passed"`
 }
 
 // ID returns report identifier in format YEAR-MONTH-DAY-DOMAIN/EMAIL-ID (can be used in config to
@@ -71,6 +74,7 @@ type Record struct {
 	Row         Row         `xml:"row" json:"row"`
 	Identifiers Identifiers `xml:"identifiers" json:"identifiers"`
 	AuthResults AuthResults `xml:"auth_results" json:"auth_results"`
+	IsPassed    bool        `json:"_is_passed"`
 }
 
 // IsPass returns true if DKIM or SPF policies are passed
@@ -131,6 +135,16 @@ func Parse(b []byte, lookupAddr bool) (Report, error) {
 	sort.Slice(result.Record, func(i, j int) bool {
 		return result.Record[i].Row.Count > result.Record[j].Row.Count
 	})
+
+	// count all counters
+	for i, record := range result.Record {
+		result.Record[i].IsPassed = record.IsPass()
+		result.Total = len(result.Record)
+		if record.IsPass() {
+			result.TotalPassed = result.TotalPassed + 1
+		}
+		result.TotalFailed = result.Total - result.TotalPassed
+	}
 
 	if lookupAddr {
 		doPTRlookup(&result)
