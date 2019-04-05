@@ -67,6 +67,7 @@ table.table.bottomless
             </div>
             <div class="col">
                 <canvas id="stats-chart"></canvas>
+                <center><span class="badge badge-success">passed {{ .Report.TotalPassed }}</span> <span class="badge badge-danger">failed {{ .Report.TotalFailed }}</span> <span class="badge">total {{ .Report.Total }}</span></center>
             </div>
         </div>
         <p></p>
