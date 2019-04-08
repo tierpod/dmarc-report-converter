@@ -73,12 +73,12 @@ func loadConfig(path string) (*config, error) {
 
 	// load and parse output file template
 	switch c.Output.Format {
-	case "txt", "html":
+	case "txt", "html", "html_static":
 		t := loadTemplate("./templates/" + c.Output.Format + ".gotmpl")
 		c.Output.template = t
 	case "json":
 	default:
-		return nil, fmt.Errorf("unknown template for format %v", c.Output.Format)
+		return nil, fmt.Errorf("unable to found template for format '%v' in templates folder", c.Output.Format)
 	}
 
 	if !c.Output.isStdout() {

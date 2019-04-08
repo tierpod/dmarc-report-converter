@@ -21,6 +21,8 @@ Support output formats:
 
 * **html** output file is the html, generated from template templates/html.gotmpl
 
+* **html_static** output file is the html, generated from template templates/html_static.gotmpl
+
 * **txt** output file is the plain text, generated from template templates/txt.gotmpl
 
 * **json** output file is the json
