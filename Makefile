@@ -1,4 +1,4 @@
-BINARIES   := bin/dmarc-report-converter
+NAME       := dmarc-report-converter
 DESTDIR    := /opt
 INSTALLDIR := $(DESTDIR)/dmarc-report-converter
 
@@ -13,23 +13,17 @@ lint:
 	#go test ./cmd/... ./pkg/...
 
 .PHONY: build
-build: lint $(BINARIES)
+build: lint $(NAME)
 
-$(BINARIES):
-	go build -v $(LDFLAGS) -o $@ cmd/$(notdir $@)/*.go
+bin/$(NAME):
+	go build -v $(LDFLAGS) -o $@ ./cmd/$(NAME)
 
 .PHONY: clean
 clean:
 	rm -f bin/*
-	rm -f release/*.tar.gz
-	rm -f install/*.retry
 	rm -f ./pprof
 
-.PHONY: doc
-doc:
-	godoc -http :6060
-
-.PHONY: install install
+.PHONY: install
 install: $(INSTALLDIR) $(INSTALLDIR)/templates
 	install -m 0755 bin/dmarc-report-converter $(INSTALLDIR)
 	install -m 0600 config/config.dist.yaml $(INSTALLDIR)/config.dist.yaml
@@ -43,10 +37,11 @@ $(INSTALLDIR) $(INSTALLDIR)/templates:
 
 .PHONY: uninstall
 uninstall:
-	rm -rf $(DESTDIR)/dmarc-report-converter
+	rm -rf $(INSTALLDIR)
 	rm -f /etc/cron.daily/dmarc-report-converter.cron
 
-release/dmarc-report-converter_linux_amd64.tar.gz: $(BINARIES)
-	mkdir -p release
+.PHONY: release
+release: clean bin/$(NAME)
+	mkdir -p release tmp
 	make DESTDIR=./tmp install
-	tar -cvzf $@ --owner=0 --group=0 -C ./tmp dmarc-report-converter
+	tar -cvzf release/$(NAME)_$(GIT_VER)_amd64.tar.gz --owner=0 --group=0 -C ./tmp $(NAME)
