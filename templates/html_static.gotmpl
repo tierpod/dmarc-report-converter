@@ -58,7 +58,12 @@ table.table.bottomless
         <p></p>
         <div class="row">
             <div class="col">
-                <center><span class="badge badge-success">passed {{ .Report.TotalPassed }}</span> <span class="badge badge-danger">failed {{ .Report.TotalFailed }}</span> <span class="badge">total {{ .Report.Total }}</span></center>
+                <div class="progress">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ .Report.TotalPassedPercent }}%" aria-valuenow="{{ .Report.TotalPassed }}" aria-valuemin="0" aria-valuemax="{{ .Report.Total }}">passed {{ .Report.TotalPassedPercent }}%</div>
+                </div>
+            </div>
+            <div class="col-md-auto">
+                <span class="badge badge-success">passed {{ .Report.TotalPassed }}</span> <span class="badge badge-danger">failed {{ .Report.TotalFailed }}</span> <span class="badge">total {{ .Report.Total }}</span>
             </div>
         </div>
         <p></p>

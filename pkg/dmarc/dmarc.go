@@ -4,6 +4,7 @@ package dmarc
 import (
 	"encoding/xml"
 	"fmt"
+	"math"
 	"net"
 	"sort"
 	"time"
@@ -14,13 +15,14 @@ const ReportIDDateTime = "2006-01-02"
 
 // Report represents root of dmarc report struct
 type Report struct {
-	XMLName         xml.Name        `xml:"feedback" json:"feedback"`
-	ReportMetadata  ReportMetadata  `xml:"report_metadata" json:"report_metadata"`
-	PolicyPublished PolicyPublished `xml:"policy_published" json:"policy_published"`
-	Record          []Record        `xml:"record" json:"record"`
-	Total           int             `json:"_total"`
-	TotalFailed     int             `json:"_total_failed"`
-	TotalPassed     int             `json:"_total_passed"`
+	XMLName            xml.Name        `xml:"feedback" json:"feedback"`
+	ReportMetadata     ReportMetadata  `xml:"report_metadata" json:"report_metadata"`
+	PolicyPublished    PolicyPublished `xml:"policy_published" json:"policy_published"`
+	Record             []Record        `xml:"record" json:"record"`
+	Total              int             `json:"_total"`
+	TotalFailed        int             `json:"_total_failed"`
+	TotalPassed        int             `json:"_total_passed"`
+	TotalPassedPercent float64         `json:"_total_passed_percent"`
 }
 
 // TotalMessages calculates total amount of messages
@@ -155,6 +157,7 @@ func Parse(b []byte, lookupAddr bool) (Report, error) {
 		}
 	}
 	result.TotalFailed = result.Total - result.TotalPassed
+	result.TotalPassedPercent = math.Round((float64(result.TotalPassed) / float64(result.Total)) * 100)
 
 	if lookupAddr {
 		doPTRlookup(&result)
