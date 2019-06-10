@@ -101,18 +101,25 @@ func processIMAP(cfg *config) {
 		}
 
 		// process each message's part
+		isSuccess := true
 		for {
 			p, err := mr.NextPart()
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				log.Fatal(err)
+				log.Printf("[ERROR] imap: can't read next part: %v, skip", err)
+				isSuccess = false
+				break
 			}
 
 			switch h := p.Header.(type) {
 			case mail.AttachmentHeader:
 				// this is an attachment
-				filename, _ := h.Filename()
+				filename, err := h.Filename()
+				if err != nil {
+					log.Printf("[ERROR] imap: %v, skip", err)
+					continue
+				}
 				log.Printf("[INFO] imap: found attachment: %v", filename)
 				// download to buffer to prevent long imap connection
 				buf, err := ioutil.ReadAll(p.Body)
@@ -124,8 +131,10 @@ func processIMAP(cfg *config) {
 			}
 		}
 
-		log.Printf("[DEBUG] imap: add SeqNum %v to delete set", msg.SeqNum)
-		deleteSet.AddNum(msg.SeqNum)
+		if isSuccess {
+			log.Printf("[DEBUG] imap: add SeqNum %v to delete set", msg.SeqNum)
+			deleteSet.AddNum(msg.SeqNum)
+		}
 		downloadCount++
 	}
 	log.Printf("[DEBUG] imap: %v attachments downloaded", downloadCount)
@@ -154,7 +163,6 @@ func processIMAP(cfg *config) {
 			return
 		}
 	}
-
 	log.Printf("[DEBUG] imap: logout")
 	if err := c.Logout(); err != nil {
 		log.Printf("[ERROR] imap: logout error %v", err)
