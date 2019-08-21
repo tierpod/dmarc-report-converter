@@ -24,21 +24,23 @@ clean:
 	rm -f ./pprof
 
 .PHONY: install
-install: $(INSTALLDIR) $(INSTALLDIR)/templates
+install: $(INSTALLDIR)
 	install -m 0755 bin/dmarc-report-converter $(INSTALLDIR)
 	install -m 0600 config/config.dist.yaml $(INSTALLDIR)/config.dist.yaml
 	cp -r templates $(INSTALLDIR)
+	cp -r assets $(INSTALLDIR)
+	cp -r install $(INSTALLDIR)
 
-/etc/cron.daily/install/dmarc-report-converter.cron:
-	install install/dmarc-report-converter.cron $@
+/etc/cron.daily/install/dmarc-report-converter.sh:
+	install install/dmarc-report-converter.sh $@
 
-$(INSTALLDIR) $(INSTALLDIR)/templates:
+$(INSTALLDIR):
 	mkdir -p $@
 
 .PHONY: uninstall
 uninstall:
 	rm -rf $(INSTALLDIR)
-	rm -f /etc/cron.daily/dmarc-report-converter.cron
+	rm -f /etc/cron.daily/dmarc-report-converter.sh
 
 .PHONY: release
 release: clean bin/$(NAME)

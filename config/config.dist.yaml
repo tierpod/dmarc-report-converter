@@ -1,6 +1,6 @@
 input:
   delete: no
-  dir: "/tmp/input"
+  dir: "/tmp/dmarc_files/"
   #imap:
   #  server: ""
   #  username: ""
@@ -8,12 +8,17 @@ input:
   #  mailbox: ""
 
 output:
-  # template for output file path or "stdout"
+  # output file
+  # should be: string, golang template string or "stdout"
   file: "/tmp/html/{{ .ID }}.html"
   # file: "/tmp/html/{{ .ReportMetadata.Email }}/{{ .PolicyPublished.Domain }}!{{.ReportMetadata.DateRange.Begin}}!{{ .ReportMetadata.ReportID }}.html"
-  # txt, json, html
-  format: "html"
-  assets_path: "./assets"
+
+  # output format
+  # should be: txt, json, html_static, html
+  format: "html_static"
+
+  # if you configure format to "html" output, don't forget to configure assets_path and your web server
+  # assets_path: "./assets"
 
 # perform reverse lookups?
 lookup_addr: no
