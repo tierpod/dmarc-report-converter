@@ -32,3 +32,19 @@ func (r *Report) MergeRecord(rec Record) {
 
 	r.Records = append(r.Records, rec)
 }
+
+// MergeReport merges another report rep to the report r. Keeps the earliest Begin date and the
+// oldest End date. Merges all records from report rep to the r. Doesn't touch another r fields.
+func (r *Report) MergeReport(rep Report) {
+	if rep.ReportMetadata.DateRange.Begin.Before(r.ReportMetadata.DateRange.Begin.Time) {
+		r.ReportMetadata.DateRange.Begin = rep.ReportMetadata.DateRange.Begin
+	}
+
+	if rep.ReportMetadata.DateRange.End.After(r.ReportMetadata.DateRange.End.Time) {
+		r.ReportMetadata.DateRange.End = rep.ReportMetadata.DateRange.End
+	}
+
+	for _, record := range rep.Records {
+		r.MergeRecord(record)
+	}
+}
