@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"math"
 	"net"
 	"sort"
 	"time"
@@ -15,24 +16,70 @@ const ReportIDDateTime = "2006-01-02"
 
 // Report represents root of dmarc report struct
 type Report struct {
-	XMLName            xml.Name        `xml:"feedback" json:"feedback"`
-	ReportMetadata     ReportMetadata  `xml:"report_metadata" json:"report_metadata"`
-	PolicyPublished    PolicyPublished `xml:"policy_published" json:"policy_published"`
-	Records            []Record        `xml:"record" json:"records"`
-	Total              int             `json:"_total"`
-	TotalFailed        int             `json:"_total_failed"`
-	TotalPassed        int             `json:"_total_passed"`
-	TotalPassedPercent float64         `json:"_total_passed_percent"`
+	XMLName         xml.Name        `xml:"feedback"`
+	ReportMetadata  ReportMetadata  `xml:"report_metadata"`
+	PolicyPublished PolicyPublished `xml:"policy_published"`
+	Records         []Record        `xml:"record"`
+	MessagesStats   MessagesStats
 }
 
-// TotalMessages calculates total amount of messages
-func (r *Report) TotalMessages() int {
-	total := 0
-	for _, record := range r.Records {
-		total = total + record.Row.Count
+// MarshalJSON calculates report messages statistic and marshals Report struct to json, adds this
+// statistic as additional fields:
+//
+//	"messages_stats" {
+//		"all": 0,
+//		"failed": 0,
+//		"passed": 0,
+//		"passed_percent": 0,
+//	}
+func (r Report) MarshalJSON() ([]byte, error) {
+	stats := r.CalculateStats()
+
+	result := struct {
+		XMLName         xml.Name        `json:"feedback"`
+		ReportMetadata  ReportMetadata  `json:"report_metadata"`
+		PolicyPublished PolicyPublished `json:"policy_published"`
+		Records         []Record        `json:"records"`
+		MessagesStats   MessagesStats   `json:"messages_stats"`
+	}{
+		XMLName:         r.XMLName,
+		ReportMetadata:  r.ReportMetadata,
+		PolicyPublished: r.PolicyPublished,
+		Records:         r.Records,
+		MessagesStats:   stats,
 	}
 
-	return total
+	return json.Marshal(result)
+}
+
+// MessagesStats includes some statistic calculated from report.
+type MessagesStats struct {
+	// All it is the total amount of email messages
+	All int `json:"all"`
+	// Failed it is the total amount of failed email messages
+	Failed int `json:"failed"`
+	// Passed it is the total amount of passed email messages
+	Passed int `json:"passed"`
+	// PassedPercent it is the percent of passed email messages
+	PassedPercent float64 `json:"passed_percent"`
+}
+
+// CalculateStats calculates messages statistic and returns new MessagesStats struct.
+func (r Report) CalculateStats() MessagesStats {
+	s := new(MessagesStats)
+	for _, record := range r.Records {
+		s.All = s.All + record.Row.Count
+	}
+
+	for _, record := range r.Records {
+		if record.IsPassed() {
+			s.Passed = s.Passed + record.Row.Count
+		}
+	}
+	s.Failed = s.All - s.Passed
+	s.PassedPercent = math.Round((float64(s.Passed) / float64(s.All)) * 100)
+
+	return *s
 }
 
 // ID returns report identifier in format YEAR-MONTH-DAY-DOMAIN/EMAIL-ID (can be used in config to
@@ -89,7 +136,7 @@ type Record struct {
 }
 
 // IsPassed returns true if DKIM or SPF policies are passed
-func (r *Record) IsPassed() bool {
+func (r Record) IsPassed() bool {
 	return (r.Row.PolicyEvaluated.DKIM == "pass" || r.Row.PolicyEvaluated.SPF == "pass")
 }
 
@@ -153,32 +200,23 @@ type SPFAuthResult struct {
 // Parse parses input xml data b to Report struct. If lookupAddr is true, performs a reverse
 // lookups for feedback>record>row>source_ip
 func Parse(b []byte, lookupAddr bool) (Report, error) {
-	var result Report
-	err := xml.Unmarshal(b, &result)
+	var r Report
+	err := xml.Unmarshal(b, &r)
 	if err != nil {
 		return Report{}, err
 	}
 
-	sort.Slice(result.Records, func(i, j int) bool {
-		return result.Records[i].Row.Count > result.Records[j].Row.Count
+	sort.Slice(r.Records, func(i, j int) bool {
+		return r.Records[i].Row.Count > r.Records[j].Row.Count
 	})
 
-	// count all counters
-	// result.Total = result.TotalMessages()
-	// for i, record := range result.Records {
-	// 	result.Records[i].IsPassed = record.IsPass()
-	// 	if result.Records[i].IsPassed {
-	// 		result.TotalPassed = result.TotalPassed + record.Row.Count
-	// 	}
-	// }
-	// result.TotalFailed = result.Total - result.TotalPassed
-	// result.TotalPassedPercent = math.Round((float64(result.TotalPassed) / float64(result.Total)) * 100)
-
 	if lookupAddr {
-		doPTRlookup(&result)
+		doPTRlookup(&r)
 	}
 
-	return result, nil
+	r.MessagesStats = r.CalculateStats()
+
+	return r, nil
 }
 
 func doPTRlookup(r *Report) error {

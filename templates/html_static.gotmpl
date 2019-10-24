@@ -59,11 +59,11 @@ table.table.bottomless
         <div class="row">
             <div class="col">
                 <div class="progress">
-                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ .Report.TotalPassedPercent }}%" aria-valuenow="{{ .Report.TotalPassed }}" aria-valuemin="0" aria-valuemax="{{ .Report.Total }}">passed {{ .Report.TotalPassedPercent }}%</div>
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ .Report.MessagesStats.PassedPercent }}%" aria-valuenow="{{ .Report.MessagesStats.Passed }}" aria-valuemin="0" aria-valuemax="{{ .Report.MessagesStats.All }}">passed {{ .Report.MessagesStats.PassedPercent }}%</div>
                 </div>
             </div>
             <div class="col-md-auto">
-                <span class="badge badge-success">passed {{ .Report.TotalPassed }}</span> <span class="badge badge-danger">failed {{ .Report.TotalFailed }}</span> <span class="badge">total {{ .Report.Total }}</span>
+                <span class="badge badge-success">passed {{ .Report.MessagesStats.Passed }}</span> <span class="badge badge-danger">failed {{ .Report.MessagesStats.Failed }}</span> <span class="badge">total {{ .Report.MessagesStats.All }}</span>
             </div>
         </div>
         <p></p>
