@@ -18,7 +18,7 @@ type Report struct {
 	XMLName            xml.Name        `xml:"feedback" json:"feedback"`
 	ReportMetadata     ReportMetadata  `xml:"report_metadata" json:"report_metadata"`
 	PolicyPublished    PolicyPublished `xml:"policy_published" json:"policy_published"`
-	Record             []Record        `xml:"record" json:"record"`
+	Records            []Record        `xml:"record" json:"records"`
 	Total              int             `json:"_total"`
 	TotalFailed        int             `json:"_total_failed"`
 	TotalPassed        int             `json:"_total_passed"`
@@ -28,7 +28,7 @@ type Report struct {
 // TotalMessages calculates total amount of messages
 func (r *Report) TotalMessages() int {
 	total := 0
-	for _, record := range r.Record {
+	for _, record := range r.Records {
 		total = total + record.Row.Count
 	}
 
@@ -144,15 +144,15 @@ func Parse(b []byte, lookupAddr bool) (Report, error) {
 		return Report{}, err
 	}
 
-	sort.Slice(result.Record, func(i, j int) bool {
-		return result.Record[i].Row.Count > result.Record[j].Row.Count
+	sort.Slice(result.Records, func(i, j int) bool {
+		return result.Records[i].Row.Count > result.Records[j].Row.Count
 	})
 
 	// count all counters
 	result.Total = result.TotalMessages()
-	for i, record := range result.Record {
-		result.Record[i].IsPassed = record.IsPass()
-		if result.Record[i].IsPassed {
+	for i, record := range result.Records {
+		result.Records[i].IsPassed = record.IsPass()
+		if result.Records[i].IsPassed {
 			result.TotalPassed = result.TotalPassed + record.Row.Count
 		}
 	}
@@ -167,7 +167,7 @@ func Parse(b []byte, lookupAddr bool) (Report, error) {
 }
 
 func doPTRlookup(r *Report) error {
-	for i, record := range r.Record {
+	for i, record := range r.Records {
 		var hostname string
 		hostnames, err := net.LookupAddr(record.Row.SourceIP)
 		if err != nil {
@@ -175,7 +175,7 @@ func doPTRlookup(r *Report) error {
 		} else {
 			hostname = hostnames[0]
 		}
-		r.Record[i].Row.SourceHostname = hostname
+		r.Records[i].Row.SourceHostname = hostname
 	}
 
 	return nil

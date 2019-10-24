@@ -7,7 +7,7 @@ DMARC report with id {{.ReportMetadata.ReportID}}
 ------------------------------------------------------------------------------------------------------------------------
 {{printf "%16v | %4v | %10v | %8v | %8v | %16v | %8v | %16v | %8v | %v" "ip"          "msgs"     "disp"                           "dkim"                    "spf"                    "dkim domain"            "dkim res"               "spf domain"            "spf res"               "hostname"         }}
 ------------------------------------------------------------------------------------------------------------------------
-{{- range .Record }}
+{{- range .Records }}
 {{- if .IsPass }}
 {{ printf "* %14v | %4v | %10v | %8v | %8v | %16v | %8v | %16v | %8v | %v" .Row.SourceIP .Row.Count .Row.PolicyEvaluated.Disposition .Row.PolicyEvaluated.DKIM .Row.PolicyEvaluated.SPF .AuthResults.DKIM.Domain .AuthResults.DKIM.Result .AuthResults.SPF.Domain .AuthResults.SPF.Result .Row.SourceHostname}}
 {{- else }}
