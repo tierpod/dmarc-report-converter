@@ -2,9 +2,9 @@
 package dmarc
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"math"
 	"net"
 	"sort"
 	"time"
@@ -83,15 +83,30 @@ type PolicyPublished struct {
 
 // Record represents feedback>record section
 type Record struct {
-	Row         Row         `xml:"row" json:"row"`
-	Identifiers Identifiers `xml:"identifiers" json:"identifiers"`
-	AuthResults AuthResults `xml:"auth_results" json:"auth_results"`
-	IsPassed    bool        `json:"_is_passed"`
+	Row         Row         `xml:"row"`
+	Identifiers Identifiers `xml:"identifiers"`
+	AuthResults AuthResults `xml:"auth_results"`
 }
 
-// IsPass returns true if DKIM or SPF policies are passed
-func (r *Record) IsPass() bool {
+// IsPassed returns true if DKIM or SPF policies are passed
+func (r *Record) IsPassed() bool {
 	return (r.Row.PolicyEvaluated.DKIM == "pass" || r.Row.PolicyEvaluated.SPF == "pass")
+}
+
+// MarshalJSON marshals Record struct to json, adds additional "_is_passed" field.
+func (r Record) MarshalJSON() ([]byte, error) {
+	result := struct {
+		Row         Row         `json:"row"`
+		Identifiers Identifiers `json:"identifiers"`
+		AuthResults AuthResults `json:"auth_results"`
+		IsPassed    bool        `json:"_is_passed"`
+	}{
+		Row:         r.Row,
+		Identifiers: r.Identifiers,
+		AuthResults: r.AuthResults,
+		IsPassed:    r.IsPassed(),
+	}
+	return json.Marshal(result)
 }
 
 // Row represents feedback>record>row section
@@ -149,15 +164,15 @@ func Parse(b []byte, lookupAddr bool) (Report, error) {
 	})
 
 	// count all counters
-	result.Total = result.TotalMessages()
-	for i, record := range result.Records {
-		result.Records[i].IsPassed = record.IsPass()
-		if result.Records[i].IsPassed {
-			result.TotalPassed = result.TotalPassed + record.Row.Count
-		}
-	}
-	result.TotalFailed = result.Total - result.TotalPassed
-	result.TotalPassedPercent = math.Round((float64(result.TotalPassed) / float64(result.Total)) * 100)
+	// result.Total = result.TotalMessages()
+	// for i, record := range result.Records {
+	// 	result.Records[i].IsPassed = record.IsPass()
+	// 	if result.Records[i].IsPassed {
+	// 		result.TotalPassed = result.TotalPassed + record.Row.Count
+	// 	}
+	// }
+	// result.TotalFailed = result.Total - result.TotalPassed
+	// result.TotalPassedPercent = math.Round((float64(result.TotalPassed) / float64(result.Total)) * 100)
 
 	if lookupAddr {
 		doPTRlookup(&result)

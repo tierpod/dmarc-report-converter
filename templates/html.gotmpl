@@ -95,7 +95,7 @@ table.table.bottomless
                     </thead>
                     <tbody id="items-table">
                         {{- range .Report.Records }}
-                        {{- if .IsPass }}
+                        {{- if .IsPassed }}
                         <tr class="policy-evaluated-result-pass table-success">
                         {{- else }}
                         <tr class="policy-evaluated-result-fail">
