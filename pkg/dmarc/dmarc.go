@@ -82,6 +82,13 @@ func (r Report) CalculateStats() MessagesStats {
 	return *s
 }
 
+// SortRecords sorts records list by Row.Count
+func (r *Report) SortRecords() {
+	sort.Slice(r.Records, func(i, j int) bool {
+		return r.Records[i].Row.Count > r.Records[j].Row.Count
+	})
+}
+
 // ID returns report identifier in format YEAR-MONTH-DAY-DOMAIN/EMAIL-ID (can be used in config to
 // calculate filename)
 func (r Report) ID() string {
@@ -206,9 +213,7 @@ func Parse(b []byte, lookupAddr bool) (Report, error) {
 		return Report{}, err
 	}
 
-	sort.Slice(r.Records, func(i, j int) bool {
-		return r.Records[i].Row.Count > r.Records[j].Row.Count
-	})
+	r.SortRecords()
 
 	if lookupAddr {
 		doPTRlookup(&r)
