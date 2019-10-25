@@ -142,7 +142,8 @@ func TestReport_MergeReport(t *testing.T) {
 	}
 
 	// check that messages statistic is updated
-	inStats := rep1.CalculateStats()
+	rep1.CalculateStats()
+	inStats := rep1.MessagesStats
 	outStats := MessagesStats{
 		All:           19,
 		Failed:        2,

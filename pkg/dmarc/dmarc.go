@@ -33,7 +33,7 @@ type Report struct {
 //		"passed_percent": 0,
 //	}
 func (r Report) MarshalJSON() ([]byte, error) {
-	stats := r.CalculateStats()
+	r.CalculateStats()
 
 	result := struct {
 		XMLName         xml.Name        `json:"feedback"`
@@ -46,7 +46,7 @@ func (r Report) MarshalJSON() ([]byte, error) {
 		ReportMetadata:  r.ReportMetadata,
 		PolicyPublished: r.PolicyPublished,
 		Records:         r.Records,
-		MessagesStats:   stats,
+		MessagesStats:   r.MessagesStats,
 	}
 
 	return json.Marshal(result)
@@ -64,8 +64,8 @@ type MessagesStats struct {
 	PassedPercent float64 `json:"passed_percent"`
 }
 
-// CalculateStats calculates messages statistic and returns new MessagesStats struct.
-func (r Report) CalculateStats() MessagesStats {
+// CalculateStats calculates messages statistic and updates Records.MessagesStats struct.
+func (r *Report) CalculateStats() {
 	s := new(MessagesStats)
 	for _, record := range r.Records {
 		s.All = s.All + record.Row.Count
@@ -79,7 +79,7 @@ func (r Report) CalculateStats() MessagesStats {
 	s.Failed = s.All - s.Passed
 	s.PassedPercent = math.Round((float64(s.Passed) / float64(s.All)) * 100)
 
-	return *s
+	r.MessagesStats = *s
 }
 
 // SortRecords sorts records list by Row.Count
@@ -219,7 +219,7 @@ func Parse(b []byte, lookupAddr bool) (Report, error) {
 		doPTRlookup(&r)
 	}
 
-	r.MessagesStats = r.CalculateStats()
+	r.CalculateStats()
 
 	return r, nil
 }
