@@ -6,6 +6,8 @@ input:
   #  username: ""
   #  password: ""
   #  mailbox: ""
+  # enable debug messages for imap package?
+  #  debug: no
 
 output:
   # output file
@@ -22,6 +24,3 @@ output:
 
 # perform reverse lookups?
 lookup_addr: no
-
-# enable debug messages for imap package?
-imap_debug: no

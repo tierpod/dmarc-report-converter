@@ -12,7 +12,6 @@ type config struct {
 	Input      Input  `yaml:"input"`
 	Output     Output `yaml:"output"`
 	LookupAddr bool   `yaml:"lookup_addr"`
-	ImapDebug  bool   `yaml:"imap_debug"`
 }
 
 // Input is the input section of config
@@ -28,6 +27,7 @@ type IMAP struct {
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
 	Mailbox  string `yaml:"mailbox"`
+	Debug    bool   `yaml:"debug"`
 }
 
 // Output is the output section of config

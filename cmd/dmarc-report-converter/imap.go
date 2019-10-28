@@ -32,7 +32,7 @@ func processIMAP(cfg *config) {
 	log.Printf("[DEBUG] imap: connected")
 	defer c.Logout()
 
-	if cfg.ImapDebug {
+	if cfg.Input.IMAP.Debug {
 		log.Printf("[DEBUG] imap: enable debug")
 		c.SetDebug(os.Stdout)
 	}
