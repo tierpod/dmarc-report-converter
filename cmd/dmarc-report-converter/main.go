@@ -27,18 +27,19 @@ func main() {
 
 	cfg, err := loadConfig(flagConfig)
 	if err != nil {
-		log.Fatalf("[ERROR] %v", err)
+		log.Fatalf("[ERROR] loadConfig: %v", err)
 	}
 
 	if cfg.LookupAddr {
 		log.Printf("[INFO] performs a reverse lookups, this may take some time")
 	}
 
-	if cfg.Input.Dir != "" {
-		processFiles(cfg)
+	if cfg.Input.IMAP.IsConfigured() {
+		err = fetchIMAPAttachments(cfg)
+		if err != nil {
+			log.Fatalf("[ERROR] fetchIMAPAttachments: %v", err)
+		}
 	}
 
-	if cfg.Input.IMAP.Server != "" {
-		processIMAP(cfg)
-	}
+	processFiles(cfg)
 }

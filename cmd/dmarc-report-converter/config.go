@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v2"
 )
@@ -28,6 +29,12 @@ type IMAP struct {
 	Password string `yaml:"password"`
 	Mailbox  string `yaml:"mailbox"`
 	Debug    bool   `yaml:"debug"`
+	Delete   bool   `yaml:"delete"`
+}
+
+// IsConfigured return true if IMAP is configured
+func (i IMAP) IsConfigured() bool {
+	return i.Server != ""
 }
 
 // Output is the output section of config
@@ -67,6 +74,15 @@ func loadConfig(path string) (*config, error) {
 	}
 
 	err = yaml.Unmarshal(data, &c)
+	if err != nil {
+		return nil, err
+	}
+
+	if c.Input.Dir == "" {
+		return nil, fmt.Errorf("input.dir is not configured")
+	}
+
+	err = os.MkdirAll(c.Input.Dir, 0775)
 	if err != nil {
 		return nil, err
 	}

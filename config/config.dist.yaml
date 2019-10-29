@@ -8,6 +8,8 @@ input:
   #  mailbox: ""
   # enable debug messages for imap package?
   #  debug: no
+  # delete emails from server after fetch?
+  #  delete: no
 
 output:
   # output file

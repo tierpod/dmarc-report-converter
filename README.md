@@ -1,7 +1,8 @@
 dmarc-report-converter
 ======================
 
-Convert DMARC reports from xml to human-readable formats.
+Convert DMARC report files from xml to human-readable formats. Files can be located on a local
+filesystem or on an IMAP server.
 
 Example of html_static output:
 ![html](screenshots/html_static.png)
@@ -13,9 +14,6 @@ Support input formats:
 * **.gz** file: gzipped dmarc report in xml format
 
 * **.zip** file: zipped dmarc report in xml format
-
-* **imap**: connect to imap server and download emails. If attachments contains **.xml**, **.gz** or
-  **.zip**, try to convert them
 
 Support output formats:
 
@@ -91,15 +89,32 @@ Configuration
 
 Copy config/config.dist.yaml to config.yaml and change parameters:
 
-* input: choose and configure **dir** OR **imap**. If **delete: yes**, delete source
-  files after converting (with configured imap, delete source emails)
+* **lookup_addr**: perform reverse lookup? If enabled, may take some time.
 
-* output: choose format and file name template. If **file** is empty string "" or "stdout", print
-  result to stdout.
+**input** section:
 
-* lookup_addr: perform reverse lookup? If enabled, may take some time.
+* **dir**: directory with input files
 
-* imap_debug: show all network activity?
+* **delete: yes**, delete source files after conversion?
+
+* **imap** *(optional)*: dmarc-report-converter can fetch reports from IMAP server to **input ->
+  dir** before conversion started. To achieve this, configure this subsection.
+
+  * **server**, **username**, **password**, **mailbox**: IMAP server address, credentials and
+    mailbox name
+
+  * **delete: yes**, delete email messages from IMAP server after successful fetching?
+
+  * **debug: yes**, print debug messages during IMAP session?
+
+**output** sections:
+
+* **file**: output file, should be string or golang template. If empty string "" or "stdout",
+  print result to stdout.
+
+* **format**: output format (txt, json, html_static, html)
+
+* **assets_path**: path to assets for html output format.
 
 Building from sources
 ---------------------
