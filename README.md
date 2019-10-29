@@ -89,34 +89,34 @@ Configuration
 
 Copy config/config.dist.yaml to config.yaml and change parameters:
 
-* **lookup_addr**: perform reverse lookup? If enabled, may take some time.
+* **lookup_addr** (bool): perform reverse lookup? If enabled, may take some time.
 
-* **merge_reports**, merge multiple similar reports to one?
+* **merge_reports** (bool): merge multiple similar reports to one?
 
 **input** section:
 
-* **dir**: directory with input files
+* **dir** (str): directory with input files
 
-* **delete: yes**, delete source files after conversion?
+* **delete** (bool): delete source files after conversion?
 
-* **imap** *(optional)*: dmarc-report-converter can fetch reports from IMAP server to **input ->
-  dir** before conversion started. To achieve this, configure this subsection.
+* **imap** *(optional section)*: dmarc-report-converter can fetch reports from IMAP server and save
+  them to **input -> dir** before conversion started. To achieve this, configure this subsection.
 
-  * **server**, **username**, **password**, **mailbox**: IMAP server address, credentials and
+  * **server**, **username**, **password**, **mailbox** (str): IMAP server address, credentials and
     mailbox name
 
-  * **delete: yes**, delete email messages from IMAP server after successful fetching?
+  * **delete** (bool): delete email messages from IMAP server after successful fetching?
 
-  * **debug: yes**, print debug messages during IMAP session?
+  * **debug** (bool): print debug messages during IMAP session?
 
 **output** sections:
 
-* **file**: output file, should be string or golang template. If empty string "" or "stdout",
-  print result to stdout.
+* **file** (str): output file, should be string or golang template. If value is empty string "" or
+  "stdout", print result to stdout.
 
-* **format**: output format (txt, json, html_static, html)
+* **format** (str): output format (txt, json, html_static, html)
 
-* **assets_path**: path to assets for html output format.
+* **assets_path** (str): path to assets for html output format.
 
 Building from sources
 ---------------------
