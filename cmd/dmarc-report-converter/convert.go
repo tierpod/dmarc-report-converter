@@ -9,41 +9,35 @@ import (
 	"github.com/tierpod/dmarc-report-converter/pkg/dmarc"
 )
 
-func readConvert(r io.Reader, i string, cfg *config) error {
+func readParse(r io.Reader, fname string, lookupAddr bool) (dmarc.Report, error) {
 	var report dmarc.Report
 	var err error
 
-	ext := filepath.Ext(i)
-	log.Printf("[INFO] convert: file %v", i)
+	ext := filepath.Ext(fname)
+	log.Printf("[DEBUG] parse: %v", fname)
 
 	switch ext {
 	case ".gz":
-		report, err = dmarc.ReadParseGZIP(r, cfg.LookupAddr)
+		report, err = dmarc.ReadParseGZIP(r, lookupAddr)
 		if err != nil {
-			return err
+			return dmarc.Report{}, err
 		}
 
 	case ".zip":
-		report, err = dmarc.ReadParseZIP(r, cfg.LookupAddr)
+		report, err = dmarc.ReadParseZIP(r, lookupAddr)
 		if err != nil {
-			return err
+			return dmarc.Report{}, err
 		}
 
 	case ".xml":
-		report, err = dmarc.ReadParseXML(r, cfg.LookupAddr)
+		report, err = dmarc.ReadParseXML(r, lookupAddr)
 		if err != nil {
-			return err
+			return dmarc.Report{}, err
 		}
 
 	default:
-		return fmt.Errorf("extention %v not supported for file %v", ext, i)
+		return dmarc.Report{}, fmt.Errorf("extention %v not supported for file %v", ext, fname)
 	}
 
-	o := newOutput(cfg)
-	err = o.do(report)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return report, nil
 }

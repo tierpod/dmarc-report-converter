@@ -41,5 +41,8 @@ func main() {
 		}
 	}
 
-	processFiles(cfg)
+	err = processFiles(cfg)
+	if err != nil {
+		log.Fatalf("[ERROR] processFiles: %v", err)
+	}
 }
