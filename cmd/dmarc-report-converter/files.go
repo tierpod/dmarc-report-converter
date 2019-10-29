@@ -8,23 +8,68 @@ import (
 	"github.com/tierpod/dmarc-report-converter/pkg/dmarc"
 )
 
-func processFiles(cfg *config) error {
-	var reports []dmarc.Report
+type filesConverter struct {
+	cfg     *config
+	files   []string
+	reports []dmarc.Report
+}
 
-	inFiles, err := filepath.Glob(filepath.Join(cfg.Input.Dir, "*.*"))
+func newFilesConverter(cfg *config) (*filesConverter, error) {
+	if _, err := os.Stat(cfg.Input.Dir); os.IsNotExist(err) {
+		err := os.MkdirAll(cfg.Input.Dir, 0775)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &filesConverter{cfg: cfg}, nil
+}
+
+func (c *filesConverter) ConvertWrite() error {
+	err := c.find()
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[DEBUG]: files: found %v input files: %v", len(inFiles), inFiles)
-	for _, f := range inFiles {
+	c.convert()
+
+	if c.cfg.MergeReports {
+		err = c.merge()
+		if err != nil {
+			return err
+		}
+	}
+
+	c.write()
+
+	if c.cfg.Input.Delete {
+		c.delete()
+	}
+
+	return nil
+}
+
+func (c *filesConverter) find() error {
+	files, err := filepath.Glob(filepath.Join(c.cfg.Input.Dir, "*.*"))
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[DEBUG]: files: found %v input files: %v", len(files), files)
+	c.files = files
+	return nil
+}
+
+func (c *filesConverter) convert() {
+	var reports []dmarc.Report
+	for _, f := range c.files {
 		file, err := os.Open(f)
 		if err != nil {
 			log.Printf("[ERROR] files: %v", err)
 			continue
 		}
 
-		report, err := readParse(file, f, cfg.LookupAddr)
+		report, err := readParse(file, f, c.cfg.LookupAddr)
 		if err != nil {
 			file.Close()
 			log.Printf("[ERROR] files: %v, skip", err)
@@ -35,29 +80,37 @@ func processFiles(cfg *config) error {
 		reports = append(reports, report)
 	}
 
-	mergedReports, err := groupMergeReports(reports)
+	c.reports = reports
+}
+
+func (c *filesConverter) merge() error {
+	reports, err := groupMergeReports(c.reports)
 	if err != nil {
 		return err
 	}
 
-	for _, report := range mergedReports {
-		o := newOutput(cfg)
-		err = o.do(report)
+	c.reports = reports
+	return nil
+}
+
+func (c *filesConverter) delete() {
+	for _, f := range c.files {
+		log.Printf("[INFO] files: delete %v after converting", f)
+		err := os.Remove(f)
+		if err != nil {
+			log.Printf("[ERROR] files: %v, skip", err)
+			continue
+		}
+	}
+}
+
+func (c *filesConverter) write() error {
+	for _, report := range c.reports {
+		o := newOutput(c.cfg)
+		err := o.do(report)
 		if err != nil {
 			return err
 		}
 	}
-
-	if cfg.Input.Delete {
-		for _, f := range inFiles {
-			log.Printf("[INFO] files: delete %v after converting", f)
-			err = os.Remove(f)
-			if err != nil {
-				log.Printf("[ERROR] files: %v, skip", err)
-				continue
-			}
-		}
-	}
-
 	return nil
 }

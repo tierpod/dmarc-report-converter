@@ -91,6 +91,8 @@ Copy config/config.dist.yaml to config.yaml and change parameters:
 
 * **lookup_addr**: perform reverse lookup? If enabled, may take some time.
 
+* **merge_reports**, merge multiple similar reports to one?
+
 **input** section:
 
 * **dir**: directory with input files

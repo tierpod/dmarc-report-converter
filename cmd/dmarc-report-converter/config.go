@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
-	"os"
 
 	"gopkg.in/yaml.v2"
 )
 
 type config struct {
-	Input      Input  `yaml:"input"`
-	Output     Output `yaml:"output"`
-	LookupAddr bool   `yaml:"lookup_addr"`
+	Input        Input  `yaml:"input"`
+	Output       Output `yaml:"output"`
+	LookupAddr   bool   `yaml:"lookup_addr"`
+	MergeReports bool   `yaml:"merge_reports"`
 }
 
 // Input is the input section of config
@@ -80,11 +80,6 @@ func loadConfig(path string) (*config, error) {
 
 	if c.Input.Dir == "" {
 		return nil, fmt.Errorf("input.dir is not configured")
-	}
-
-	err = os.MkdirAll(c.Input.Dir, 0775)
-	if err != nil {
-		return nil, err
 	}
 
 	// load and parse output file template

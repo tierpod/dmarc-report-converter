@@ -30,6 +30,11 @@ func main() {
 		log.Fatalf("[ERROR] loadConfig: %v", err)
 	}
 
+	converter, err := newFilesConverter(cfg)
+	if err != nil {
+		log.Fatalf("[ERROR] newFilesConverter: %v", err)
+	}
+
 	if cfg.LookupAddr {
 		log.Printf("[INFO] performs a reverse lookups, this may take some time")
 	}
@@ -41,7 +46,7 @@ func main() {
 		}
 	}
 
-	err = processFiles(cfg)
+	err = converter.ConvertWrite()
 	if err != nil {
 		log.Fatalf("[ERROR] processFiles: %v", err)
 	}

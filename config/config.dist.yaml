@@ -26,3 +26,6 @@ output:
 
 # perform reverse lookups?
 lookup_addr: no
+
+# merge multiple similar reports to one?
+merge_reports: yes
