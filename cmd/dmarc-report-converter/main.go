@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/hashicorp/logutils"
 )
 
 var version string
@@ -30,6 +32,8 @@ func main() {
 		log.Fatalf("[ERROR] loadConfig: %v", err)
 	}
 
+	setupLog(cfg.LogDebug, cfg.LogDatetime)
+
 	converter, err := newFilesConverter(cfg)
 	if err != nil {
 		log.Fatalf("[ERROR] newFilesConverter: %v", err)
@@ -50,4 +54,24 @@ func main() {
 	if err != nil {
 		log.Fatalf("[ERROR] processFiles: %v", err)
 	}
+}
+
+func setupLog(debug, datetime bool) {
+	filter := &logutils.LevelFilter{
+		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR"},
+		MinLevel: logutils.LogLevel("INFO"),
+		Writer:   os.Stdout,
+	}
+
+	if debug {
+		filter.MinLevel = logutils.LogLevel("DEBUG")
+	}
+
+	if datetime {
+		log.SetFlags(log.LstdFlags)
+	} else {
+		log.SetFlags(0)
+	}
+
+	log.SetOutput(filter)
 }

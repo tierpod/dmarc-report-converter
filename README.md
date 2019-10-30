@@ -93,6 +93,10 @@ Copy config/config.dist.yaml to config.yaml and change parameters:
 
 * **merge_reports** (bool): merge multiple similar reports to one?
 
+* **log_debug** (bool): print debug log messages?
+
+* **log_datetime** (bool): print log messages datetime?
+
 **input** section:
 
 * **dir** (str): directory with input files

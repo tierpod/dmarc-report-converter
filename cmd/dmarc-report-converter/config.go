@@ -13,6 +13,8 @@ type config struct {
 	Output       Output `yaml:"output"`
 	LookupAddr   bool   `yaml:"lookup_addr"`
 	MergeReports bool   `yaml:"merge_reports"`
+	LogDebug     bool   `yaml:"log_debug"`
+	LogDatetime  bool   `yaml:"log_datetime"`
 }
 
 // Input is the input section of config

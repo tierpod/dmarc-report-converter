@@ -29,3 +29,6 @@ lookup_addr: no
 
 # merge multiple similar reports to one?
 merge_reports: yes
+
+log_debug: no
+log_datetime: no
