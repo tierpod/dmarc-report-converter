@@ -55,7 +55,7 @@ func (c *filesConverter) find() error {
 		return err
 	}
 
-	log.Printf("[DEBUG]: files: found %v input files: %v", len(files), files)
+	log.Printf("[DEBUG] files: found %v input files", len(files))
 	c.files = files
 	return nil
 }
