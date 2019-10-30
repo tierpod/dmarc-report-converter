@@ -122,6 +122,20 @@ Copy config/config.dist.yaml to config.yaml and change parameters:
 
 * **assets_path** (str): path to assets for html output format.
 
+Weekly or monthly reports
+-------------------------
+
+Many providers send reports to your email address every day. If you want to get weekly or monthly
+reports:
+
+* Set **input -> delete: yes** and **input -> imap -> delete: yes**, because all old reports should
+  be deleted from the source
+
+* Set **merge_reports: yes**, because all similar reports should be merged
+
+* Execute dmarc-report-converter every **week** / **month** (add weekly / monthly crontab task or
+  systemd timer)
+
 Building from sources
 ---------------------
 
