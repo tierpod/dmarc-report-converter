@@ -50,15 +50,7 @@ Installation
    sudo nano config.yaml
    ```
 
-4. If you want to execute it daily, add crontab daily job:
-
-   ```bash
-   sudo cp install/dmarc-report-converter.sh /etc/cron.daily/
-   ```
-
-   or systemd service unit + systemd timer unit (see examples in "install" directory)
-
-5. If you want to use "html" output, you have to configure your web server to serve **assets**
+4. If you want to use "html" output, you have to configure your web server to serve **assets**
    directory and change assets_path in configuration file. Example for nginx:
 
    ```bash
@@ -95,7 +87,7 @@ Copy config/config.dist.yaml to config.yaml and change parameters:
 
 * **log_debug** (bool): print debug log messages?
 
-* **log_datetime** (bool): print log messages datetime?
+* **log_datetime** (bool): add datetime to log messages?
 
 **input** section:
 
@@ -109,23 +101,42 @@ Copy config/config.dist.yaml to config.yaml and change parameters:
   * **server**, **username**, **password**, **mailbox** (str): IMAP server address, credentials and
     mailbox name
 
-  * **delete** (bool): delete email messages from IMAP server after successful fetching?
+  * **delete** (bool): delete email messages from IMAP server if reports are fetched successfully
 
   * **debug** (bool): print debug messages during IMAP session?
 
-**output** sections:
+**output** section:
 
-* **file** (str): output file, should be string or golang template. If value is empty string "" or
-  "stdout", print result to stdout.
+* **file** (str): output file, should be string or golang template. If value is empty string *""* or
+  *"stdout"*, print result to stdout. Inside golang template any field from *dmarc.Report* struct
+  can be used, or shortcuts *.ID*, *.TodayID*
 
 * **format** (str): output format (txt, json, html_static, html)
 
-* **assets_path** (str): path to assets for html output format.
+* **assets_path** (str, *optional for html*): path to assets for html output format.
+
+Daily reports
+--------------
+
+If you want to convert reports daily:
+
+* Set **input -> delete: yes** and **input -> imap -> delete: yes**, because all old reports should
+  be deleted from the source
+
+* Set **merge_reports: no** (do not merge any reports, use as-is)
+
+* Execute dmarc-report-converter every day (add daily crontab job or systemd timer):
+
+  ```bash
+  sudo cp install/dmarc-report-converter.sh /etc/cron.daily/
+  ```
+
+* Use **{{ .ID }}** or **{{ .TodayID }}** shortcut in **output -> file**
 
 Weekly or monthly reports
 -------------------------
 
-Many providers send reports to your email address every day. If you want to get weekly or monthly
+Many providers send reports to your email address every day. If you want to make weekly or monthly
 reports:
 
 * Set **input -> delete: yes** and **input -> imap -> delete: yes**, because all old reports should
@@ -133,11 +144,11 @@ reports:
 
 * Set **merge_reports: yes**, because all similar reports should be merged
 
-* Execute dmarc-report-converter every **week** / **month** (add weekly / monthly crontab task or
+* Execute dmarc-report-converter every **week** / **month** (add weekly / monthly crontab job or
   systemd timer)
 
-* Replace **output -> file -> {{ .ID }}** shortcut with **{{ .TodayID }}**, if you want to create
-  output file with current date in filename (instead of begin report date).
+* Use **{{ .TodayID }}** shortcut in **output -> file**, if you want to create output file with
+  current date in filename (instead of begin report date).
 
 Building from sources
 ---------------------
