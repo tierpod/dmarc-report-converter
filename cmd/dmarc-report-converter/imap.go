@@ -1,38 +1,34 @@
 package main
 
 import (
-	"bytes"
+	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	imap "github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-message/mail"
 )
 
-type bufferMessage struct {
-	buf      []byte
-	filename string
-}
-
-func (bm *bufferMessage) reader() io.Reader {
-	return bytes.NewReader(bm.buf)
-}
-
-func processIMAP(cfg *config) {
+func fetchIMAPAttachments(cfg *config) error {
 	log.Printf("[INFO] imap: connecting to server %v", cfg.Input.IMAP.Server)
 
 	// connect to server
 	c, err := client.DialTLS(cfg.Input.IMAP.Server, nil)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	log.Printf("[DEBUG] imap: connected")
-	defer c.Logout()
+	defer func() {
+		log.Printf("[DEBUG] imap: logout")
+		if err := c.Logout(); err != nil {
+			log.Printf("[ERROR] imap: logout error %v", err)
+		}
+	}()
 
-	if cfg.ImapDebug {
+	if cfg.Input.IMAP.Debug {
 		log.Printf("[DEBUG] imap: enable debug")
 		c.SetDebug(os.Stdout)
 	}
@@ -40,20 +36,19 @@ func processIMAP(cfg *config) {
 	// login
 	err = c.Login(cfg.Input.IMAP.Username, cfg.Input.IMAP.Password)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	log.Printf("[DEBUG] imap: logged in")
 
 	// select mailbox
 	mbox, err := c.Select(cfg.Input.IMAP.Mailbox, false)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// get all messages
 	if mbox.Messages == 0 {
-		log.Printf("[WARN] imap: no message in mailbox")
-		return
+		return fmt.Errorf("no messages found in mailbox")
 	}
 
 	from := uint32(1)
@@ -72,32 +67,28 @@ func processIMAP(cfg *config) {
 	section := &imap.BodySectionName{}
 	items := []imap.FetchItem{section.FetchItem()}
 
-	messages := make(chan *imap.Message, 10)
+	messages := make(chan *imap.Message, 1)
 	done := make(chan error, 1)
 
 	go func() {
 		done <- c.Fetch(seqSet, items, messages)
 	}()
 
-	var bufferMessages []bufferMessage
 	downloadCount := 0
 	for msg := range messages {
 		if msg == nil {
-			log.Printf("[ERROR] imap: server didn't returned message")
-			return
+			return fmt.Errorf("server didn't return message")
 		}
 
 		br := msg.GetBody(section)
 		if br == nil {
-			log.Printf("[ERROR] imap: server didn't returned message body")
-			return
+			return fmt.Errorf("server didn't return message body")
 		}
 
 		// create a new mail reader
 		mr, err := mail.CreateReader(br)
 		if err != nil {
-			log.Printf("[ERROR] imap: %v", err)
-			return
+			return err
 		}
 
 		// process each message's part
@@ -121,17 +112,25 @@ func processIMAP(cfg *config) {
 					continue
 				}
 				log.Printf("[INFO] imap: found attachment: %v", filename)
-				// download to buffer to prevent long imap connection
-				buf, err := ioutil.ReadAll(p.Body)
+
+				outFile := filepath.Join(cfg.Input.Dir, filename)
+				log.Printf("[INFO] imap: save attachment to: %v", outFile)
+				f, err := os.Create(outFile)
 				if err != nil {
 					log.Printf("[ERROR] imap: %v, skip", err)
 					continue
 				}
-				bufferMessages = append(bufferMessages, bufferMessage{buf, filename})
+
+				_, err = io.Copy(f, p.Body)
+				if err != nil {
+					log.Printf("[ERROR] imap: %v, skip", err)
+					continue
+				}
+				f.Close()
 			}
 		}
 
-		if isSuccess {
+		if isSuccess && cfg.Input.IMAP.Delete {
 			log.Printf("[DEBUG] imap: add SeqNum %v to delete set", msg.SeqNum)
 			deleteSet.AddNum(msg.SeqNum)
 		}
@@ -140,12 +139,11 @@ func processIMAP(cfg *config) {
 	log.Printf("[DEBUG] imap: %v attachments downloaded", downloadCount)
 
 	if err := <-done; err != nil {
-		log.Printf("[ERROR] imap: %v", err)
-		return
+		return err
 	}
 
-	if cfg.Input.Delete {
-		log.Printf("[DEBUG] imap: delete emails after converting")
+	if cfg.Input.IMAP.Delete {
+		log.Printf("[DEBUG] imap: delete emails after fetch")
 
 		// first, mark the messages as deleted
 		delItems := imap.FormatFlagsOp(imap.AddFlags, false)
@@ -153,29 +151,14 @@ func processIMAP(cfg *config) {
 
 		err := c.Store(deleteSet, delItems, delFlags, nil)
 		if err != nil {
-			log.Printf("[ERROR] imap: %v", err)
-			return
+			return err
 		}
 
 		// then delete it
 		if err := c.Expunge(nil); err != nil {
-			log.Printf("[ERROR] imap: %v", err)
-			return
+			return err
 		}
-	}
-	log.Printf("[DEBUG] imap: logout")
-	if err := c.Logout(); err != nil {
-		log.Printf("[ERROR] imap: logout error %v", err)
 	}
 
-	doneCount := 0
-	for _, bm := range bufferMessages {
-		err = readConvert(bm.reader(), bm.filename, cfg)
-		if err != nil {
-			log.Printf("[ERROR] imap: %v, skip", err)
-			continue
-		}
-		doneCount++
-	}
-	log.Printf("[INFO] imap: %v files converted", doneCount)
+	return nil
 }

@@ -1,7 +1,8 @@
 dmarc-report-converter
 ======================
 
-Convert DMARC reports from xml to human-readable formats.
+Convert DMARC report files from xml to human-readable formats. Files can be located on a local
+filesystem or on an IMAP server.
 
 Example of html_static output:
 ![html](screenshots/html_static.png)
@@ -13,9 +14,6 @@ Support input formats:
 * **.gz** file: gzipped dmarc report in xml format
 
 * **.zip** file: zipped dmarc report in xml format
-
-* **imap**: connect to imap server and download emails. If attachments contains **.xml**, **.gz** or
-  **.zip**, try to convert them
 
 Support output formats:
 
@@ -52,15 +50,7 @@ Installation
    sudo nano config.yaml
    ```
 
-4. If you want to execute it daily, add crontab daily job:
-
-   ```bash
-   sudo cp install/dmarc-report-converter.sh /etc/cron.daily/
-   ```
-
-   or systemd service unit + systemd timer unit (see examples in "install" directory)
-
-5. If you want to use "html" output, you have to configure your web server to serve **assets**
+4. If you want to use "html" output, you have to configure your web server to serve **assets**
    directory and change assets_path in configuration file. Example for nginx:
 
    ```bash
@@ -91,15 +81,74 @@ Configuration
 
 Copy config/config.dist.yaml to config.yaml and change parameters:
 
-* input: choose and configure **dir** OR **imap**. If **delete: yes**, delete source
-  files after converting (with configured imap, delete source emails)
+* **lookup_addr** (bool): perform reverse lookup? If enabled, may take some time.
 
-* output: choose format and file name template. If **file** is empty string "" or "stdout", print
-  result to stdout.
+* **merge_reports** (bool): merge multiple similar reports to one?
 
-* lookup_addr: perform reverse lookup? If enabled, may take some time.
+* **log_debug** (bool): print debug log messages?
 
-* imap_debug: show all network activity?
+* **log_datetime** (bool): add datetime to log messages?
+
+**input** section:
+
+* **dir** (str): directory with input files
+
+* **delete** (bool): delete source files after conversion?
+
+* **imap** *(optional section)*: dmarc-report-converter can fetch reports from IMAP server and save
+  them to **input -> dir** before conversion started. To achieve this, configure this subsection.
+
+  * **server**, **username**, **password**, **mailbox** (str): IMAP server address, credentials and
+    mailbox name
+
+  * **delete** (bool): delete email messages from IMAP server if reports are fetched successfully
+
+  * **debug** (bool): print debug messages during IMAP session?
+
+**output** section:
+
+* **file** (str): output file, should be string or golang template. If value is empty string *""* or
+  *"stdout"*, print result to stdout. Inside golang template any field from *dmarc.Report* struct
+  can be used, or shortcuts *.ID*, *.TodayID*
+
+* **format** (str): output format (txt, json, html_static, html)
+
+* **assets_path** (str, *optional for html*): path to assets for html output format.
+
+Daily reports
+--------------
+
+If you want to convert reports daily:
+
+* Set **input -> delete: yes** and **input -> imap -> delete: yes**, because all old reports should
+  be deleted from the source
+
+* Set **merge_reports: no** (do not merge any reports, use as-is)
+
+* Execute dmarc-report-converter every day (add daily crontab job or systemd timer):
+
+  ```bash
+  sudo cp install/dmarc-report-converter.sh /etc/cron.daily/
+  ```
+
+* Use **{{ .ID }}** or **{{ .TodayID }}** shortcut in **output -> file**
+
+Weekly or monthly reports
+-------------------------
+
+Many providers send reports to your email address every day. If you want to make weekly or monthly
+reports:
+
+* Set **input -> delete: yes** and **input -> imap -> delete: yes**, because all old reports should
+  be deleted from the source
+
+* Set **merge_reports: yes**, because all similar reports should be merged
+
+* Execute dmarc-report-converter every **week** / **month** (add weekly / monthly crontab job or
+  systemd timer)
+
+* Use **{{ .TodayID }}** shortcut in **output -> file**, if you want to create output file with
+  current date in filename (instead of begin report date).
 
 Building from sources
 ---------------------

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/hashicorp/logutils"
 )
 
 var version string
@@ -27,18 +29,49 @@ func main() {
 
 	cfg, err := loadConfig(flagConfig)
 	if err != nil {
-		log.Fatalf("[ERROR] %v", err)
+		log.Fatalf("[ERROR] loadConfig: %v", err)
+	}
+
+	setupLog(cfg.LogDebug, cfg.LogDatetime)
+
+	converter, err := newFilesConverter(cfg)
+	if err != nil {
+		log.Fatalf("[ERROR] newFilesConverter: %v", err)
 	}
 
 	if cfg.LookupAddr {
 		log.Printf("[INFO] performs a reverse lookups, this may take some time")
 	}
 
-	if cfg.Input.Dir != "" {
-		processFiles(cfg)
+	if cfg.Input.IMAP.IsConfigured() {
+		err = fetchIMAPAttachments(cfg)
+		if err != nil {
+			log.Fatalf("[ERROR] fetchIMAPAttachments: %v", err)
+		}
 	}
 
-	if cfg.Input.IMAP.Server != "" {
-		processIMAP(cfg)
+	err = converter.ConvertWrite()
+	if err != nil {
+		log.Fatalf("[ERROR] processFiles: %v", err)
 	}
+}
+
+func setupLog(debug, datetime bool) {
+	filter := &logutils.LevelFilter{
+		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR"},
+		MinLevel: logutils.LogLevel("INFO"),
+		Writer:   os.Stdout,
+	}
+
+	if debug {
+		filter.MinLevel = logutils.LogLevel("DEBUG")
+	}
+
+	if datetime {
+		log.SetFlags(log.LstdFlags)
+	} else {
+		log.SetFlags(0)
+	}
+
+	log.SetOutput(filter)
 }

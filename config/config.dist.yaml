@@ -6,6 +6,10 @@ input:
   #  username: ""
   #  password: ""
   #  mailbox: ""
+  # enable debug messages for imap package?
+  #  debug: no
+  # delete emails from server after fetch?
+  #  delete: no
 
 output:
   # output file
@@ -23,5 +27,8 @@ output:
 # perform reverse lookups?
 lookup_addr: no
 
-# enable debug messages for imap package?
-imap_debug: no
+# merge multiple similar reports to one?
+merge_reports: yes
+
+log_debug: no
+log_datetime: no

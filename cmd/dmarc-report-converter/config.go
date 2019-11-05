@@ -9,10 +9,12 @@ import (
 )
 
 type config struct {
-	Input      Input  `yaml:"input"`
-	Output     Output `yaml:"output"`
-	LookupAddr bool   `yaml:"lookup_addr"`
-	ImapDebug  bool   `yaml:"imap_debug"`
+	Input        Input  `yaml:"input"`
+	Output       Output `yaml:"output"`
+	LookupAddr   bool   `yaml:"lookup_addr"`
+	MergeReports bool   `yaml:"merge_reports"`
+	LogDebug     bool   `yaml:"log_debug"`
+	LogDatetime  bool   `yaml:"log_datetime"`
 }
 
 // Input is the input section of config
@@ -28,6 +30,13 @@ type IMAP struct {
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
 	Mailbox  string `yaml:"mailbox"`
+	Debug    bool   `yaml:"debug"`
+	Delete   bool   `yaml:"delete"`
+}
+
+// IsConfigured return true if IMAP is configured
+func (i IMAP) IsConfigured() bool {
+	return i.Server != ""
 }
 
 // Output is the output section of config
@@ -69,6 +78,10 @@ func loadConfig(path string) (*config, error) {
 	err = yaml.Unmarshal(data, &c)
 	if err != nil {
 		return nil, err
+	}
+
+	if c.Input.Dir == "" {
+		return nil, fmt.Errorf("input.dir is not configured")
 	}
 
 	// load and parse output file template
