@@ -89,10 +89,17 @@ func (r *Report) SortRecords() {
 	})
 }
 
-// ID returns report identifier in format YEAR-MONTH-DAY-DOMAIN/EMAIL-ID (can be used in config to
-// calculate filename)
+// ID returns report identifier with format YEAR-MONTH-DAY-DOMAIN/EMAIL-ID (can be used in config to
+// calculate filename), where date is the begin date of report.
 func (r Report) ID() string {
 	d := r.ReportMetadata.DateRange.Begin.Format(ReportIDDateTime)
+	return fmt.Sprintf("%v-%v/%v-%v", d, r.PolicyPublished.Domain, r.ReportMetadata.Email, r.ReportMetadata.ReportID)
+}
+
+// TodayID returns report identifier in format YEAR-MONTH-DAY-DOMAIN/EMAIL-ID (can be used in config to
+// calculate filename), where date is the current date.
+func (r Report) TodayID() string {
+	d := time.Now().Format(ReportIDDateTime)
 	return fmt.Sprintf("%v-%v/%v-%v", d, r.PolicyPublished.Domain, r.ReportMetadata.Email, r.ReportMetadata.ReportID)
 }
 
