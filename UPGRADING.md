@@ -20,3 +20,5 @@ configured, you have to update configuration file.
 * config: added *input -> imap -> delete*
 
 * config: added *log_datetime* and *log_debug* parameters
+
+* config: added {{. TodayID }} shortcut for filename
