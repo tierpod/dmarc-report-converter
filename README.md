@@ -136,6 +136,9 @@ reports:
 * Execute dmarc-report-converter every **week** / **month** (add weekly / monthly crontab task or
   systemd timer)
 
+* Replace **output -> file -> {{ .ID }}** shortcut with **{{ .TodayID }}**, if you want to create
+  output file with current date in filename (instead of begin report date).
+
 Building from sources
 ---------------------
 
