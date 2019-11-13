@@ -9,9 +9,10 @@ import (
 )
 
 type filesConverter struct {
-	cfg     *config
-	files   []string
-	reports []dmarc.Report
+	cfg          *config
+	files        []string
+	filesSuccess []string
+	reports      []dmarc.Report
 }
 
 func newFilesConverter(cfg *config) (*filesConverter, error) {
@@ -65,10 +66,12 @@ func (c *filesConverter) find() error {
 
 func (c *filesConverter) convert() {
 	var reports []dmarc.Report
+	var filesSuccess []string
+
 	for _, f := range c.files {
 		file, err := os.Open(f)
 		if err != nil {
-			log.Printf("[ERROR] files: %v", err)
+			log.Printf("[ERROR] files: %v, skip", err)
 			continue
 		}
 
@@ -80,9 +83,11 @@ func (c *filesConverter) convert() {
 		}
 		file.Close()
 
+		filesSuccess = append(filesSuccess, f)
 		reports = append(reports, report)
 	}
 
+	c.filesSuccess = filesSuccess
 	c.reports = reports
 }
 
@@ -97,8 +102,8 @@ func (c *filesConverter) merge() error {
 }
 
 func (c *filesConverter) delete() {
-	for _, f := range c.files {
-		log.Printf("[INFO] files: delete %v after converting", f)
+	for _, f := range c.filesSuccess {
+		log.Printf("[INFO] files: delete %v", f)
 		err := os.Remove(f)
 		if err != nil {
 			log.Printf("[ERROR] files: %v, skip", err)
