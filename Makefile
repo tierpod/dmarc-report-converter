@@ -22,6 +22,7 @@ bin/$(NAME):
 clean:
 	rm -f bin/*
 	rm -f ./pprof
+	rm -rf ./tmp/dmarc-report-converter
 
 .PHONY: install
 install: $(INSTALLDIR)
