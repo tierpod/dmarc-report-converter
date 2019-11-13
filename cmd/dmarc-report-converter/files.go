@@ -40,7 +40,10 @@ func (c *filesConverter) ConvertWrite() error {
 		}
 	}
 
-	c.write()
+	err = c.write()
+	if err != nil {
+		return err
+	}
 
 	if c.cfg.Input.Delete {
 		c.delete()
