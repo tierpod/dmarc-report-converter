@@ -20,10 +20,10 @@ jobs:
       with:
         fetch-depth: 1
 
-    - name: Lint
+    - name: Test and lint
       run: |
         go get -u golang.org/x/lint/golint
-        make lint
+        make test
 
     - name: Build
       run: |
