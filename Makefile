@@ -42,4 +42,4 @@ $(INSTALLDIR) dist tmp:
 .PHONY: release
 release: clean dist
 	make DESTDIR=./tmp install
-	tar -cvzf dist/$(NAME)_$(GIT_VER)_amd64.tar.gz --owner=0 --group=0 -C ./tmp $(NAME)
+	tar -cvzf dist/$(NAME)_$(GIT_VER)_x86-64.tar.gz --owner=0 --group=0 -C ./tmp $(NAME)
