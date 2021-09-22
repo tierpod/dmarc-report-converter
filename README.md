@@ -1,6 +1,9 @@
 dmarc-report-converter
 ======================
 
+⚠️ this repo has been forked from https://github.com/tierpod/dmarc-report-converter I've bumped a couple of dependencies and slightly reworked the IMAP
+client to better handle exceptions. These modifications will end up eventually in the upstream repo.
+
 Convert DMARC report files from xml to human-readable formats. Files can be located on a local
 filesystem or on an IMAP server.
 

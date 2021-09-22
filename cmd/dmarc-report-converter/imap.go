@@ -1,150 +1,108 @@
 package main
 
 import (
-	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 
 	imap "github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
-	"github.com/emersion/go-message/mail"
+	"github.com/emersion/go-message"
 )
 
 func fetchIMAPAttachments(cfg *config) error {
-	log.Printf("[INFO] imap: connecting to server %v", cfg.Input.IMAP.Server)
 
-	// connect to server
+	log.Println("[INFO] Connecting to server...")
+
 	c, err := client.DialTLS(cfg.Input.IMAP.Server, nil)
 	if err != nil {
-		return err
-	}
-	log.Printf("[DEBUG] imap: connected")
-	defer func() {
-		log.Printf("[DEBUG] imap: logout")
-		if err := c.Logout(); err != nil {
-			log.Printf("[ERROR] imap: logout error %v", err)
-		}
-	}()
-
-	if cfg.Input.IMAP.Debug {
-		log.Printf("[DEBUG] imap: enable debug")
-		c.SetDebug(os.Stdout)
+		log.Fatal(err)
 	}
 
-	// login
-	err = c.Login(cfg.Input.IMAP.Username, cfg.Input.IMAP.Password)
-	if err != nil {
-		return err
-	}
-	log.Printf("[DEBUG] imap: logged in")
+	log.Printf("[INFO] Connected to: %s ", cfg.Input.IMAP.Server)
 
-	// select mailbox
+	defer c.Logout()
+
+	if err := c.Login(cfg.Input.IMAP.Username, cfg.Input.IMAP.Password); err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("[INFO] Logged in as: %s", cfg.Input.IMAP.Username)
+
 	mbox, err := c.Select(cfg.Input.IMAP.Mailbox, false)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
-	// get all messages
-	if mbox.Messages == 0 {
-		return fmt.Errorf("no messages found in mailbox")
-	}
-
-	from := uint32(1)
-	to := mbox.Messages
-
-	log.Printf("[INFO] imap: found %v messages, %v unseen", mbox.Messages, mbox.Unseen)
-
-	// set for all messages
-	seqSet := new(imap.SeqSet)
-	seqSet.AddRange(from, to)
+	seqset := new(imap.SeqSet)
+	seqset.AddRange(1, mbox.Messages)
 
 	// set for delete messages
 	deleteSet := new(imap.SeqSet)
 
-	// get the whole message body
-	section := &imap.BodySectionName{}
-	items := []imap.FetchItem{section.FetchItem()}
-
-	messages := make(chan *imap.Message, 1)
+	messages := make(chan *imap.Message, 10)
 	done := make(chan error, 1)
-
 	go func() {
-		done <- c.Fetch(seqSet, items, messages)
+		done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchRFC822}, messages)
 	}()
 
-	downloadCount := 0
+	countMessages := 0
+	countProcessedMessages := 0
+
 	for msg := range messages {
-		if msg == nil {
-			return fmt.Errorf("server didn't return message")
-		}
+		downloadSuccess := false
+		countMessages += 1
+		for _, r := range msg.Body {
 
-		br := msg.GetBody(section)
-		if br == nil {
-			return fmt.Errorf("server didn't return message body")
-		}
+			entity, err := message.Read(r)
+			if err != nil {
 
-		// create a new mail reader
-		mr, err := mail.CreateReader(br)
-		if err != nil {
-			return err
-		}
-
-		// process each message's part
-		isSuccess := true
-		for {
-			p, err := mr.NextPart()
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				log.Printf("[ERROR] imap: can't read next part: %v, skip", err)
-				isSuccess = false
-				break
+				log.Fatal(err)
 			}
 
-			switch h := p.Header.(type) {
-			case mail.AttachmentHeader:
-				// this is an attachment
-				filename, err := h.Filename()
-				if err != nil {
-					log.Printf("[ERROR] imap: %v, skip", err)
-					continue
-				}
-				log.Printf("[INFO] imap: found attachment: %v", filename)
+			multiPartReader := entity.MultipartReader()
 
-				outFile := filepath.Join(cfg.Input.Dir, filename)
-				log.Printf("[INFO] imap: save attachment to: %v", outFile)
-				f, err := os.Create(outFile)
-				if err != nil {
-					log.Printf("[ERROR] imap: %v, skip", err)
+			for e, err := multiPartReader.NextPart(); err != io.EOF; e, err = multiPartReader.NextPart() {
+
+				kind, _, cErr := e.Header.ContentType()
+				if cErr != nil {
+					log.Fatal(cErr)
+				}
+
+				if kind != "application/gzip" && kind != "application/zip" && kind != "application/octet-stream" {
 					continue
 				}
 
-				_, err = io.Copy(f, p.Body)
-				if err != nil {
-					log.Printf("[ERROR] imap: %v, skip", err)
-					continue
+				_, v, _ := e.Header.ContentDisposition()
+
+				c, rErr := ioutil.ReadAll(e.Body)
+				if rErr != nil {
+					log.Fatal(rErr)
 				}
-				f.Close()
+
+				outFile := filepath.Join(cfg.Input.Dir, v["filename"])
+
+				log.Printf("[INFO] * Extracting file %s", outFile)
+
+				if fErr := ioutil.WriteFile(outFile, c, 0777); err != nil {
+					log.Fatal(fErr)
+				}
+				downloadSuccess = true
+				countProcessedMessages += 1
 			}
 		}
-
-		if isSuccess && cfg.Input.IMAP.Delete {
+		if downloadSuccess && cfg.Input.IMAP.Delete {
 			log.Printf("[DEBUG] imap: add SeqNum %v to delete set", msg.SeqNum)
 			deleteSet.AddNum(msg.SeqNum)
 		}
-		downloadCount++
 	}
-	log.Printf("[DEBUG] imap: %v attachments downloaded", downloadCount)
 
 	if err := <-done; err != nil {
-		return err
+		log.Fatal(err)
 	}
 
-	if cfg.Input.IMAP.Delete {
-		log.Printf("[DEBUG] imap: delete emails after fetch")
-
+	if countProcessedMessages > 0 && cfg.Input.IMAP.Delete {
+		log.Printf("[INFO] imap: delete emails after fetch")
 		// first, mark the messages as deleted
 		delItems := imap.FormatFlagsOp(imap.AddFlags, false)
 		delFlags := []interface{}{imap.DeletedFlag}
@@ -160,5 +118,6 @@ func fetchIMAPAttachments(cfg *config) error {
 		}
 	}
 
+	log.Printf("[INFO] Total messages: %d, Processed messages: %d", countMessages, countProcessedMessages)
 	return nil
 }
