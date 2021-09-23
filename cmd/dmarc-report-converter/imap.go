@@ -4,6 +4,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 
 	imap "github.com/emersion/go-imap"
@@ -49,7 +50,13 @@ func fetchIMAPAttachments(cfg *config) error {
 	countMessages := 0
 	countProcessedMessages := 0
 
+	if len(messages) == 0 {
+		log.Printf("[INFO] No new messages inside %s", cfg.Input.IMAP.Mailbox)
+		os.Exit(0)
+	}
+
 	for msg := range messages {
+
 		downloadSuccess := false
 		countMessages += 1
 		for _, r := range msg.Body {
