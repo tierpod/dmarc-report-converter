@@ -92,14 +92,13 @@ func fetchIMAPAttachments(cfg *config) error {
 		}
 
 		// process each message's part
-		isSuccess := true
+		isSuccess := false
 		for {
 			p, err := mr.NextPart()
 			if err == io.EOF {
 				break
 			} else if err != nil {
 				log.Printf("[ERROR] imap: can't read next part: %v, skip", err)
-				isSuccess = false
 				break
 			}
 
@@ -126,7 +125,12 @@ func fetchIMAPAttachments(cfg *config) error {
 					log.Printf("[ERROR] imap: %v, skip", err)
 					continue
 				}
-				f.Close()
+				err = f.Close()
+				if err != nil {
+					log.Printf("[ERROR] imap: %v, skip", err)
+					continue
+				}
+				isSuccess = true
 			}
 		}
 
