@@ -75,6 +75,7 @@ func fetchIMAPAttachments(cfg *config) error {
 	}()
 
 	downloadCount := 0
+	deleteCount := 0
 	for msg := range messages {
 		if msg == nil {
 			return fmt.Errorf("server didn't return message")
@@ -137,6 +138,7 @@ func fetchIMAPAttachments(cfg *config) error {
 		if isSuccess && cfg.Input.IMAP.Delete {
 			log.Printf("[DEBUG] imap: add SeqNum %v to delete set", msg.SeqNum)
 			deleteSet.AddNum(msg.SeqNum)
+			deleteCount++
 		}
 		downloadCount++
 	}
@@ -146,7 +148,7 @@ func fetchIMAPAttachments(cfg *config) error {
 		return err
 	}
 
-	if cfg.Input.IMAP.Delete {
+	if cfg.Input.IMAP.Delete && deleteCount > 0 {
 		log.Printf("[DEBUG] imap: delete emails after fetch")
 
 		// first, mark the messages as deleted
