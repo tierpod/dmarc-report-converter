@@ -84,15 +84,19 @@ func loadConfig(path string) (*config, error) {
 		return nil, fmt.Errorf("input.dir is not configured")
 	}
 
-	// load and parse output file template
+	// Determine which template is used based upon Output.Format.
+	t := txtTmpl
 	switch c.Output.Format {
-	case "txt", "html", "html_static":
-		t := loadTemplate("./templates/" + c.Output.Format + ".gotmpl")
-		c.Output.template = t
+	case "txt":
+	case "html":
+		t = htmlTmpl
+	case "html_static":
+		t = htmlStaticTmpl
 	case "json":
 	default:
 		return nil, fmt.Errorf("unable to found template for format '%v' in templates folder", c.Output.Format)
 	}
+	c.Output.template = template.Must(template.New("report").Parse(t))
 
 	if !c.Output.isStdout() {
 		// load and parse output filename template
