@@ -57,16 +57,6 @@ func (o *Output) isStdout() bool {
 	return false
 }
 
-func loadTemplate(s string) *template.Template {
-	data, err := ioutil.ReadFile(s)
-	if err != nil {
-		panic(err)
-	}
-
-	t := template.Must(template.New("report").Parse(string(data)))
-	return t
-}
-
 func loadConfig(path string) (*config, error) {
 	var c config
 
