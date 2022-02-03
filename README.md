@@ -122,6 +122,15 @@ Copy config/config.dist.yaml to config.yaml and change parameters:
 * **external_template** (str, *mandatory for external_template format*): path to external template
   file
 
+Templates
+---------
+
+External templates can reference to dmarc.Report struct as `.` (dot, see consts.go for example).
+
+Additional functions can be used:
+
+* `now "2006-2-1"` returns current date and time, first argument is the golang time format.
+
 Daily reports
 --------------
 
