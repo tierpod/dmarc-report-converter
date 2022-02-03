@@ -17,17 +17,21 @@ Support input formats:
 
 Support output formats:
 
-* **html_static** output file is the html, generated from template templates/html_static.gotmpl.
+* **html_static** output file is a HTML, generated from builtin template htmlStaticTmpl (consts.go).
   This format uses bootstrap hosted on bootstrapcdn, so you don't need to configure self-hosted
   bootsrap assets.
 
-* **html** output file is the html, generated from template templates/html.gotmpl.
+* **html** output file is a HTML, generated from builtin template htmlTmpl (consts.go ).
   This format uses self-hosted bootsrap and javascript assets, so you need to configure your web
   server and *output -> assets_path* option.
 
-* **txt** output file is the plain text, generated from template templates/txt.gotmpl
+* **txt** output file is the plain text, generated from builtin template txtTmpl (consts.go).
 
-* **json** output file is the json
+* **json** output file is the json, represents dmarc.Report struct.
+
+* **external_template** output file generated from external template file. Path to this file
+  must be set with *output -> external_template* option. Builtin template txtTmpl (consts.go) can
+  be used as example.
 
 Installation
 ------------
@@ -111,9 +115,12 @@ Copy config/config.dist.yaml to config.yaml and change parameters:
   *"stdout"*, print result to stdout. Inside golang template any field from *dmarc.Report* struct
   can be used, or shortcuts *.ID*, *.TodayID*
 
-* **format** (str): output format (txt, json, html_static, html)
+* **format** (str): output format (txt, json, html_static, html, external_template)
 
-* **assets_path** (str, *optional for html*): path to assets for html output format.
+* **assets_path** (str, *optional for html format*): path to assets for html output format.
+
+* **external_template** (str, *mandatory for external_template format*): path to external template
+  file
 
 Daily reports
 --------------
