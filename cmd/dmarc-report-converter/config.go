@@ -41,12 +41,13 @@ func (i IMAP) IsConfigured() bool {
 
 // Output is the output section of config
 type Output struct {
-	File         string `yaml:"file"`
-	fileTemplate *template.Template
-	Format       string `yaml:"format"`
-	Template     string
-	template     *template.Template
-	AssetsPath   string `yaml:"assets_path"`
+	File             string `yaml:"file"`
+	fileTemplate     *template.Template
+	Format           string `yaml:"format"`
+	Template         string
+	template         *template.Template
+	AssetsPath       string `yaml:"assets_path"`
+	ExternalTemplate string `yaml:"external_template"`
 }
 
 func (o *Output) isStdout() bool {
@@ -82,6 +83,15 @@ func loadConfig(path string) (*config, error) {
 		t = htmlTmpl
 	case "html_static":
 		t = htmlStaticTmpl
+	case "external_template":
+		if c.Output.ExternalTemplate == "" {
+			return nil, fmt.Errorf("'output.external_template' must be configured to use external_template output")
+		}
+		data, err := ioutil.ReadFile(c.Output.ExternalTemplate)
+		if err != nil {
+			return nil, err
+		}
+		t = string(data)
 	case "json":
 	default:
 		return nil, fmt.Errorf("unable to found template for format '%v' in templates folder", c.Output.Format)

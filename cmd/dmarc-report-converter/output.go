@@ -51,7 +51,7 @@ func (o *output) do(d dmarc.Report) error {
 	}
 
 	switch o.cfg.Output.Format {
-	case "txt":
+	case "txt", "external_template":
 		err = o.template(d)
 	case "html", "html_static":
 		err = o.templateHTML(d)
