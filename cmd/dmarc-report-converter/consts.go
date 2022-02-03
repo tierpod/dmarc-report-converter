@@ -316,4 +316,5 @@ DMARC report with id {{.ReportMetadata.ReportID}}
 {{- end}}
 {{- end }}
 
-{{ printf "Total: %v, passed %v, failed %v" .MessagesStats.All .MessagesStats.Passed .MessagesStats.Failed }}`
+{{ printf "Total: %v, passed %v, failed %v" .MessagesStats.All .MessagesStats.Passed .MessagesStats.Failed }}
+`
