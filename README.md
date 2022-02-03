@@ -36,7 +36,7 @@ Support output formats:
 Installation
 ------------
 
-1. Get installation archive. There are two ways: download pre-builded archive from
+1. Get installation archive. There are two ways: download pre-built archive from
    [github releases](https://github.com/tierpod/dmarc-report-converter/releases) page or
    [build from sources](#building-from-sources)
 
