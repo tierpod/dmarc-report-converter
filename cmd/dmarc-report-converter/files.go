@@ -59,7 +59,7 @@ func (c *filesConverter) find() error {
 		return err
 	}
 
-	log.Printf("[DEBUG] files: found %v input files", len(files))
+	log.Printf("[INFO] files: found %v input files in %v", len(files), c.cfg.Input.Dir)
 	c.files = files
 	return nil
 }
@@ -78,7 +78,7 @@ func (c *filesConverter) convert() {
 		report, err := readParse(file, f, c.cfg.LookupAddr)
 		if err != nil {
 			file.Close()
-			log.Printf("[ERROR] files: %v, skip", err)
+			log.Printf("[ERROR] files: %v in file %v, skip", err, f)
 			continue
 		}
 		file.Close()
