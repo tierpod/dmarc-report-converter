@@ -32,7 +32,6 @@ clean:
 install: $(INSTALLDIR) bin/$(NAME)
 	install -m 0755 bin/$(NAME) $(INSTALLDIR)
 	install -m 0600 config/config.dist.yaml $(INSTALLDIR)/config.dist.yaml
-	cp -r templates $(INSTALLDIR)
 	cp -r assets $(INSTALLDIR)
 	cp -r install $(INSTALLDIR)
 
