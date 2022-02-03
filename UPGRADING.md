@@ -1,6 +1,28 @@
 UPGRADING instructions
 ======================
 
+Migration to 0.6
+----------------
+
+Since v0.6, all templates moved from templates/*.gotmpl files to consts.go (thanks to @morrowc).
+This change makes installation and usage easier - you don't have to install and update templates
+folder anymore. Inside external template dmarc.Report struct can be used (see consts.go -> txtTmpl
+for example).
+
+If you prefer to use self-written external templates, you can still do this:
+
+```yaml
+output:
+  format: "external_template"
+  external_template: "/path/to/your/txt.gotmpl"
+```
+
+* config: added *output -> format -> external_template* format
+
+* config: added *output -> external_template* option
+
+* deleted templates folder
+
 Migration to 0.5
 ----------------
 
@@ -21,4 +43,4 @@ configured, you have to update configuration file.
 
 * config: added *log_datetime* and *log_debug* parameters
 
-* config: added {{. TodayID }} shortcut for filename
+* config: added {{ .TodayID }} shortcut for filename
