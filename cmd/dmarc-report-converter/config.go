@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"time"
 
 	"gopkg.in/yaml.v2"
 )
@@ -96,11 +97,17 @@ func loadConfig(path string) (*config, error) {
 	default:
 		return nil, fmt.Errorf("unable to found template for format '%v' in templates folder", c.Output.Format)
 	}
-	c.Output.template = template.Must(template.New("report").Parse(t))
+	tmplFuncs := template.FuncMap{
+		"now": func(fmt string) string {
+			return time.Now().Format(fmt)
+		},
+	}
+
+	c.Output.template = template.Must(template.New("report").Funcs(tmplFuncs).Parse(t))
 
 	if !c.Output.isStdout() {
 		// load and parse output filename template
-		ft := template.Must(template.New("filename").Parse(c.Output.File))
+		ft := template.Must(template.New("filename").Funcs(tmplFuncs).Parse(c.Output.File))
 		c.Output.fileTemplate = ft
 	}
 
