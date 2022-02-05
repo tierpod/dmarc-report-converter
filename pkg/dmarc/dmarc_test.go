@@ -146,3 +146,20 @@ func TestReadParseXML(t *testing.T) {
 		t.Errorf("ReadParseXML: parsed structs are invalid: %+v", out)
 	}
 }
+
+func TestReadParseGZIP(t *testing.T) {
+	f, err := os.Open("testdata/test.xml.gz")
+	if err != nil {
+		t.Fatalf("ReadParseGZIP: %v", err)
+	}
+	defer f.Close()
+
+	out, err := ReadParseGZIP(f, false)
+	if err != nil {
+		t.Fatalf("ReadParseGZIP: %v", err)
+	}
+
+	if !reflect.DeepEqual(out, xmlReport) {
+		t.Errorf("ReadParseGZIP: parsed structs are invalid: %+v", out)
+	}
+}
