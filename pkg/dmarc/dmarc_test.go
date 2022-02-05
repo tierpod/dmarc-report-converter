@@ -182,7 +182,7 @@ func TestReadParseZIP(t *testing.T) {
 }
 
 func TestReadParse(t *testing.T) {
-	testFiles := []string{"testdata/test.xml", "testdata/test.xml.gz", "testdata/test.xml.zip"}
+	testFiles := []string{"testdata/test.xml", "testdata/test.xml.gz", "testdata/test.xml.zip", "testdata/test.xml.gz.gz"}
 	for _, testFile := range testFiles {
 		f, err := os.Open(testFile)
 		if err != nil {

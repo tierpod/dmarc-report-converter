@@ -29,6 +29,22 @@ func ReadParseXML(r io.Reader, lookupAddr bool) (Report, error) {
 	return report, nil
 }
 
+func unpackGZIP(b []byte) ([]byte, error) {
+	r := bytes.NewReader(b)
+	gr, err := gzip.NewReader(r)
+	if err != nil {
+		return nil, err
+	}
+	defer gr.Close()
+
+	data, err := ioutil.ReadAll(gr)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, err
+}
+
 // ReadParseGZIP reads gzipped xml data from r and parses it to Report struct. If lookupAddr is
 // true, performs a reverse lookups for feedback>record>row>source_ip
 func ReadParseGZIP(r io.Reader, lookupAddr bool) (Report, error) {
@@ -103,6 +119,17 @@ func ReadParse(r io.Reader, lookupAddr bool) (Report, error) {
 
 	br := bytes.NewReader(data)
 	if mtype == "application/x-gzip" {
+		// in some cases inside gzip file can be places gzipped xml (gzipped twice)
+		// unpack and check mimetype again
+		gzdata, err := unpackGZIP(data)
+		if err != nil {
+			return Report{}, err
+		}
+		gzmtype := http.DetectContentType(gzdata)
+		if gzmtype == "application/x-gzip" {
+			log.Printf("[DEBUG] ReadParse: detected nested %v mimetype", gzmtype)
+			br = bytes.NewReader(gzdata)
+		}
 		report, err = ReadParseGZIP(br, lookupAddr)
 		if err != nil {
 			return Report{}, err
