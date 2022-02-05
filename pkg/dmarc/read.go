@@ -13,6 +13,15 @@ import (
 	"strings"
 )
 
+const (
+	// MimeTypeGZIP is the mimetype for *.gz files
+	MimeTypeGZIP = "application/x-gzip"
+	// MimeTypeZIP is the mimetype for *.zip files
+	MimeTypeZIP = "application/zip"
+	// MimeTypeXML is the mimetype for *.xml files
+	MimeTypeXML = "text/xml"
+)
+
 // ReadParseXML reads xml data from r and parses it to Report struct. If lookupAddr is
 // true, performs a reverse lookups for feedback>record>row>source_ip
 func ReadParseXML(r io.Reader, lookupAddr bool) (Report, error) {
@@ -48,7 +57,7 @@ func ReadParseGZIP(r io.Reader, lookupAddr bool) (Report, error) {
 	}
 
 	mtype := http.DetectContentType(data)
-	if mtype == "application/x-gzip" {
+	if mtype == MimeTypeGZIP {
 		log.Printf("[DEBUG] ReadParseGZIP: detected nested %v mimetype", mtype)
 		return ReadParseGZIP(buf, lookupAddr)
 	}
@@ -117,17 +126,17 @@ func ReadParse(r io.Reader, lookupAddr bool) (Report, error) {
 	log.Printf("[DEBUG] ReadParse: detected %v mimetype", mtype)
 
 	br := bytes.NewReader(data)
-	if mtype == "application/x-gzip" {
+	if mtype == MimeTypeGZIP {
 		report, err = ReadParseGZIP(br, lookupAddr)
 		if err != nil {
 			return Report{}, err
 		}
-	} else if mtype == "application/zip" {
+	} else if mtype == MimeTypeZIP {
 		report, err = ReadParseZIP(br, lookupAddr)
 		if err != nil {
 			return Report{}, err
 		}
-	} else if strings.HasPrefix(mtype, "text/xml") {
+	} else if strings.HasPrefix(mtype, MimeTypeXML) {
 		report, err = ReadParseXML(br, lookupAddr)
 		if err != nil {
 			return Report{}, err
