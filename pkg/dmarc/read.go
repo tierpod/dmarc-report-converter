@@ -60,14 +60,11 @@ func ReadParseGZIP(r io.Reader, lookupAddr bool) (Report, error) {
 	if mtype == MimeTypeGZIP {
 		log.Printf("[DEBUG] ReadParseGZIP: detected nested %v mimetype", mtype)
 		return ReadParseGZIP(buf, lookupAddr)
+	} else if strings.HasPrefix(mtype, MimeTypeXML) {
+		return ReadParseXML(buf, lookupAddr)
 	}
 
-	d, err := ReadParseXML(buf, lookupAddr)
-	if err != nil {
-		return Report{}, err
-	}
-
-	return d, nil
+	return Report{}, fmt.Errorf("ReadParseGZIP: supported mimetypes not found")
 }
 
 // ReadParseZIP reads zipped xml data from r and parses it to Report struct. If lookupAddr is
