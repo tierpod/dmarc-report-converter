@@ -13,11 +13,7 @@ func isRecordsEqual(r1, r2 Record) bool {
 	rr2.Row.Count = 0
 
 	// compare copied structs
-	if reflect.DeepEqual(rr1, rr2) {
-		return true
-	}
-
-	return false
+	return reflect.DeepEqual(rr1, rr2)
 }
 
 // MergeRecord merges new record rec to the report r.
