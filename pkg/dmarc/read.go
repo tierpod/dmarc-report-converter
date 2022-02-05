@@ -10,8 +10,9 @@ import (
 	"path/filepath"
 )
 
-// readParse reads all from reader and parses it to Report struct
-func readParse(r io.Reader, lookupAddr bool) (Report, error) {
+// ReadParseXML reads xml data from r and parses it to Report struct. If lookupAddr is
+// true, performs a reverse lookups for feedback>record>row>source_ip
+func ReadParseXML(r io.Reader, lookupAddr bool) (Report, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return Report{}, err
@@ -25,17 +26,6 @@ func readParse(r io.Reader, lookupAddr bool) (Report, error) {
 	return report, nil
 }
 
-// ReadParseXML reads xml data from r and parses it to Report struct. If lookupAddr is
-// true, performs a reverse lookups for feedback>record>row>source_ip
-func ReadParseXML(r io.Reader, lookupAddr bool) (Report, error) {
-	d, err := readParse(r, lookupAddr)
-	if err != nil {
-		return Report{}, err
-	}
-
-	return d, nil
-}
-
 // ReadParseGZIP reads gzipped xml data from r and parses it to Report struct. If lookupAddr is
 // true, performs a reverse lookups for feedback>record>row>source_ip
 func ReadParseGZIP(r io.Reader, lookupAddr bool) (Report, error) {
@@ -45,7 +35,7 @@ func ReadParseGZIP(r io.Reader, lookupAddr bool) (Report, error) {
 	}
 	defer gr.Close()
 
-	d, err := readParse(gr, lookupAddr)
+	d, err := ReadParseXML(gr, lookupAddr)
 	if err != nil {
 		return Report{}, err
 	}
@@ -84,7 +74,7 @@ func ReadParseZIP(r io.Reader, lookupAddr bool) (Report, error) {
 		}
 		defer rr.Close()
 
-		d, err := readParse(rr, lookupAddr)
+		d, err := ReadParseXML(rr, lookupAddr)
 		if err != nil {
 			return Report{}, err
 		}
