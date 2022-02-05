@@ -145,7 +145,7 @@ func ReadParse(r io.Reader, lookupAddr bool) (Report, error) {
 			return Report{}, err
 		}
 	} else {
-		return Report{}, fmt.Errorf("mimetype %v not supported for", mtype)
+		return Report{}, fmt.Errorf("mimetype %v not supported", mtype)
 	}
 
 	return report, nil
