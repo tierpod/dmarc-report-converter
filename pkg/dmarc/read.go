@@ -30,12 +30,7 @@ func ReadParseXML(r io.Reader, lookupAddr bool) (Report, error) {
 		return Report{}, err
 	}
 
-	report, err := Parse(data, lookupAddr)
-	if err != nil {
-		return Report{}, err
-	}
-
-	return report, nil
+	return Parse(data, lookupAddr)
 }
 
 // ReadParseGZIP reads gzipped xml data from r and parses it to Report struct. If lookupAddr is
@@ -98,12 +93,7 @@ func ReadParseZIP(r io.Reader, lookupAddr bool) (Report, error) {
 		}
 		defer rr.Close()
 
-		d, err := ReadParseXML(rr, lookupAddr)
-		if err != nil {
-			return Report{}, err
-		}
-
-		return d, nil
+		return ReadParseXML(rr, lookupAddr)
 	}
 
 	return Report{}, err
@@ -118,29 +108,17 @@ func ReadParse(r io.Reader, lookupAddr bool) (Report, error) {
 		return Report{}, err
 	}
 
-	var report Report
 	mtype := http.DetectContentType(data)
 	log.Printf("[DEBUG] ReadParse: detected %v mimetype", mtype)
 
 	br := bytes.NewReader(data)
 	if mtype == MimeTypeGZIP {
-		report, err = ReadParseGZIP(br, lookupAddr)
-		if err != nil {
-			return Report{}, err
-		}
+		return ReadParseGZIP(br, lookupAddr)
 	} else if mtype == MimeTypeZIP {
-		report, err = ReadParseZIP(br, lookupAddr)
-		if err != nil {
-			return Report{}, err
-		}
+		return ReadParseZIP(br, lookupAddr)
 	} else if strings.HasPrefix(mtype, MimeTypeXML) {
-		report, err = ReadParseXML(br, lookupAddr)
-		if err != nil {
-			return Report{}, err
-		}
-	} else {
-		return Report{}, fmt.Errorf("mimetype %v not supported", mtype)
+		return ReadParseXML(br, lookupAddr)
 	}
 
-	return report, nil
+	return Report{}, fmt.Errorf("mimetype %v not supported", mtype)
 }
