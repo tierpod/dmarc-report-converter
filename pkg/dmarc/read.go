@@ -4,10 +4,13 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"path/filepath"
+	"strings"
 )
 
 // ReadParseXML reads xml data from r and parses it to Report struct. If lookupAddr is
@@ -83,4 +86,40 @@ func ReadParseZIP(r io.Reader, lookupAddr bool) (Report, error) {
 	}
 
 	return Report{}, err
+}
+
+// ReadParse reads any data from reader r, detects mimetype, and parses it to
+// Report struct (if mimetype is supported).
+// If lookupAddr is true, performs reverse lookups for feedback>record>row>source_ip
+func ReadParse(r io.Reader, lookupAddr bool) (Report, error) {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return Report{}, err
+	}
+
+	var report Report
+	mtype := http.DetectContentType(data)
+	log.Printf("[DEBUG] ReadParse: detected %v mimetype", mtype)
+
+	br := bytes.NewReader(data)
+	if mtype == "application/x-gzip" {
+		report, err = ReadParseGZIP(br, lookupAddr)
+		if err != nil {
+			return Report{}, err
+		}
+	} else if mtype == "application/zip" {
+		report, err = ReadParseZIP(br, lookupAddr)
+		if err != nil {
+			return Report{}, err
+		}
+	} else if strings.HasPrefix(mtype, "text/xml") {
+		report, err = ReadParseXML(br, lookupAddr)
+		if err != nil {
+			return Report{}, err
+		}
+	} else {
+		return Report{}, fmt.Errorf("mimetype %v not supported for", mtype)
+	}
+
+	return report, nil
 }
