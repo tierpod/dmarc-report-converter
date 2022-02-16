@@ -60,7 +60,7 @@ func setupLog(debug, datetime bool) {
 	filter := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR"},
 		MinLevel: logutils.LogLevel("INFO"),
-		Writer:   os.Stdout,
+		Writer:   os.Stderr,
 	}
 
 	if debug {
