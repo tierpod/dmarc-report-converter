@@ -160,7 +160,7 @@ const htmlStaticTmpl = `
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap core CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
 <style>
 td.left-border, th.left-border
 {
@@ -217,7 +217,7 @@ table.table.bottomless
                 </div>
             </div>
             <div class="col-md-auto">
-                <span class="badge badge-success">passed {{ .Report.MessagesStats.Passed }}</span> <span class="badge badge-danger">failed {{ .Report.MessagesStats.Failed }}</span> <span class="badge">total {{ .Report.MessagesStats.All }}</span>
+                <span class="badge bg-success">passed {{ .Report.MessagesStats.Passed }}</span> <span class="badge bg-danger">failed {{ .Report.MessagesStats.Failed }}</span> <span class="badge">total {{ .Report.MessagesStats.All }}</span>
             </div>
         </div>
         <p></p>
@@ -256,36 +256,36 @@ table.table.bottomless
                         <td class="left-border" title="identifiers&#13;header_from: {{.Identifiers.HeaderFrom}}&#13;envelope_from: {{.Identifiers.EnvelopeFrom}}">{{.Row.PolicyEvaluated.Disposition}}</td>
                         <td>
                             {{- if eq .Row.PolicyEvaluated.DKIM "fail" }}
-                            <span class="badge badge-danger">{{.Row.PolicyEvaluated.DKIM}}</span>
+                            <span class="badge bg-danger">{{.Row.PolicyEvaluated.DKIM}}</span>
                             {{- else }}
-                            <span class="badge badge-success">{{.Row.PolicyEvaluated.DKIM}}</span>
+                            <span class="badge bg-success">{{.Row.PolicyEvaluated.DKIM}}</span>
                             {{- end}}
                         </td>
                         <td>
                             {{- if eq .Row.PolicyEvaluated.SPF "fail" }}
-                            <span class="badge badge-danger">{{.Row.PolicyEvaluated.SPF}}</span>
+                            <span class="badge bg-danger">{{.Row.PolicyEvaluated.SPF}}</span>
                             {{- else }}
-                            <span class="badge badge-success">{{.Row.PolicyEvaluated.SPF}}</span>
+                            <span class="badge bg-success">{{.Row.PolicyEvaluated.SPF}}</span>
                             {{- end }}
                         </td>
                         <td class="left-border">{{.AuthResults.DKIM.Domain}}</td>
                         <td title="selector: {{.AuthResults.DKIM.Selector}}">
                             {{- if eq .AuthResults.DKIM.Result "pass"}}
-                            <span class="badge badge-success">{{.AuthResults.DKIM.Result}}</span>
+                            <span class="badge bg-success">{{.AuthResults.DKIM.Result}}</span>
                             {{- else if eq .AuthResults.DKIM.Result "fail"}}
-                            <span class="badge badge-danger">{{.AuthResults.DKIM.Result}}</span>
+                            <span class="badge bg-danger">{{.AuthResults.DKIM.Result}}</span>
                             {{- else}}
-                            <span class="badge badge-warning">{{.AuthResults.DKIM.Result}}</span>
+                            <span class="badge bg-warning">{{.AuthResults.DKIM.Result}}</span>
                             {{- end}}
                         </td>
                         <td>{{.AuthResults.SPF.Domain}}</td>
                         <td title="scope: {{.AuthResults.SPF.Scope}}">
                             {{- if eq .AuthResults.SPF.Result "pass"}}
-                            <span class="badge badge-success">{{.AuthResults.SPF.Result}}</span>
+                            <span class="badge bg-success">{{.AuthResults.SPF.Result}}</span>
                             {{- else if eq .AuthResults.SPF.Result "fail"}}
-                            <span class="badge badge-danger">{{.AuthResults.SPF.Result}}</span>
+                            <span class="badge bg-danger">{{.AuthResults.SPF.Result}}</span>
                             {{- else}}
-                            <span class="badge badge-warning">{{.AuthResults.SPF.Result}}</span>
+                            <span class="badge bg-warning">{{.AuthResults.SPF.Result}}</span>
                             {{- end}}
                         </td>
                         </tr>
