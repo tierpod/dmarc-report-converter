@@ -70,7 +70,7 @@ table.table.bottomless
             </div>
             <div class="col">
                 <canvas id="stats-chart"></canvas>
-                <center><span class="badge bg-success">passed {{ .Report.MessagesStats.Passed }}</span> <span class="badge bg-danger">failed {{ .Report.MessagesStats.Failed }}</span> <span class="badge">total {{ .Report.MessagesStats.All }}</span></center>
+                <center><span class="badge bg-success">passed {{ .Report.MessagesStats.Passed }}</span> <span class="badge bg-danger">failed {{ .Report.MessagesStats.Failed }}</span> <span class="badge text-bg-light">total {{ .Report.MessagesStats.All }}</span></center>
             </div>
         </div>
         <p></p>
@@ -217,7 +217,7 @@ table.table.bottomless
                 </div>
             </div>
             <div class="col-md-auto">
-                <span class="badge bg-success">passed {{ .Report.MessagesStats.Passed }}</span> <span class="badge bg-danger">failed {{ .Report.MessagesStats.Failed }}</span> <span class="badge">total {{ .Report.MessagesStats.All }}</span>
+                <span class="badge bg-success">passed {{ .Report.MessagesStats.Passed }}</span> <span class="badge bg-danger">failed {{ .Report.MessagesStats.Failed }}</span> <span class="badge text-bg-light">total {{ .Report.MessagesStats.All }}</span>
             </div>
         </div>
         <p></p>
