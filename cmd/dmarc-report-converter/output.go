@@ -38,6 +38,7 @@ func (o *output) do(d dmarc.Report) error {
 		dir := filepath.Dir(file)
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
+			log.Printf("[ERROR] mkdir: %v, skip", err)
 			return nil
 		}
 
