@@ -38,7 +38,7 @@ func (o *output) do(d dmarc.Report) error {
 		dir := filepath.Dir(file)
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		log.Printf("[INFO] output: write to file %v", file)
