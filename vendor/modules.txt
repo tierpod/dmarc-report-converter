@@ -14,7 +14,7 @@ github.com/emersion/go-sasl
 github.com/emersion/go-textwrapper
 # github.com/hashicorp/logutils v0.0.0-20150609070431-0dc08b1671f3
 github.com/hashicorp/logutils
-# golang.org/x/text v0.3.1-0.20180410181320-7922cc490dd5
+# golang.org/x/text v0.3.8
 golang.org/x/text/encoding
 golang.org/x/text/encoding/charmap
 golang.org/x/text/encoding/internal
