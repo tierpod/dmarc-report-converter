@@ -22,10 +22,8 @@ jobs:
 
     - name: Test and lint
       run: |
-        go get -u golang.org/x/lint/golint
+        go install honnef.co/go/tools/cmd/staticcheck@latest
         make test
-      env:
-        GOPATH: /home/runner/go
 
     - name: Build
       run: |
