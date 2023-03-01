@@ -37,6 +37,7 @@ func groupMergeReports(reports []dmarc.Report) ([]dmarc.Report, error) {
 	// group reports by key
 	for _, r := range reports {
 		key := groupReportsKey(r)
+		//lint:ignore S1036 we dont want to add nil value
 		if _, found := grouped[key]; found {
 			grouped[key] = append(grouped[key], r)
 		} else {
