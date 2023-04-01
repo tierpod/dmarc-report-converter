@@ -69,12 +69,17 @@ func ParseNumber(f interface{}) (uint32, error) {
 		return n, nil
 	}
 
-	s, ok := f.(string)
-	if !ok {
+	var s string
+	switch f := f.(type) {
+	case RawString:
+		s = string(f)
+	case string:
+		s = f
+	default:
 		return 0, newParseError("expected a number, got a non-atom")
 	}
 
-	nbr, err := strconv.ParseUint(s, 10, 32)
+	nbr, err := strconv.ParseUint(string(s), 10, 32)
 	if err != nil {
 		return 0, &parseError{err}
 	}
@@ -90,10 +95,7 @@ func ParseString(f interface{}) (string, error) {
 	}
 
 	// Useful for tests
-	if q, ok := f.(Quoted); ok {
-		return string(q), nil
-	}
-	if a, ok := f.(Atom); ok {
+	if a, ok := f.(RawString); ok {
 		return string(a), nil
 	}
 
@@ -158,6 +160,9 @@ func (r *Reader) ReadCrlf() (err error) {
 	if char, _, err = r.ReadRune(); err != nil {
 		return
 	}
+	if char == lf {
+		return
+	}
 	if char != cr {
 		err = newParseError("line doesn't end with a CR")
 		return
@@ -187,7 +192,7 @@ func (r *Reader) ReadAtom() (interface{}, error) {
 		if r.brackets == 0 && (char == listStart || char == literalStart || char == dquote) {
 			return nil, newParseError("atom contains forbidden char: " + string(char))
 		}
-		if char == cr {
+		if char == cr || char == lf {
 			break
 		}
 		if r.brackets == 0 && (char == sp || char == listEnd) {
@@ -212,9 +217,10 @@ func (r *Reader) ReadAtom() (interface{}, error) {
 
 	r.UnreadRune()
 
-	if atom == "NIL" {
+	if atom == nilAtom {
 		return nil, nil
 	}
+
 	return atom, nil
 }
 
@@ -231,6 +237,12 @@ func (r *Reader) ReadLiteral() (Literal, error) {
 		return nil, err
 	}
 	lstr = trimSuffix(lstr, literalEnd)
+
+	nonSync := strings.HasSuffix(lstr, "+")
+	if nonSync {
+		lstr = trimSuffix(lstr, '+')
+	}
+
 	n, err := strconv.ParseUint(lstr, 10, 32)
 	if err != nil {
 		return nil, newParseError("cannot parse literal length: " + err.Error())
@@ -244,7 +256,7 @@ func (r *Reader) ReadLiteral() (Literal, error) {
 	}
 
 	// Send continuation request if necessary
-	if r.continues != nil {
+	if r.continues != nil && !nonSync {
 		r.continues <- true
 	}
 
@@ -331,8 +343,8 @@ func (r *Reader) ReadFields() (fields []interface{}, err error) {
 		if char, _, err = r.ReadRune(); err != nil {
 			return
 		}
-		if char == cr || char == listEnd || char == respCodeEnd {
-			if char == cr {
+		if char == cr || char == lf || char == listEnd || char == respCodeEnd {
+			if char == cr || char == lf {
 				r.UnreadRune()
 			}
 			return
@@ -431,20 +443,14 @@ func (r *Reader) ReadRespCode() (code StatusRespCode, fields []interface{}, err 
 }
 
 func (r *Reader) ReadInfo() (info string, err error) {
-	info, err = r.ReadString(byte(cr))
+	info, err = r.ReadString(byte(lf))
 	if err != nil {
 		return
 	}
+	info = strings.TrimSuffix(info, string(lf))
 	info = strings.TrimSuffix(info, string(cr))
 	info = strings.TrimLeft(info, " ")
 
-	var char rune
-	if char, _, err = r.ReadRune(); err != nil {
-		return
-	}
-	if char != lf {
-		err = newParseError("line doesn't end with a LF")
-	}
 	return
 }
 

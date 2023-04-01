@@ -104,7 +104,7 @@ func fetchIMAPAttachments(cfg *config) error {
 			}
 
 			switch h := p.Header.(type) {
-			case mail.AttachmentHeader:
+			case *mail.AttachmentHeader:
 				// this is an attachment
 				filename, err := h.Filename()
 				if err != nil {

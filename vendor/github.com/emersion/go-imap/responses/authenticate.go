@@ -11,14 +11,17 @@ import (
 type Authenticate struct {
 	Mechanism       sasl.Client
 	InitialResponse []byte
-	Writer          *imap.Writer
+	RepliesCh       chan []byte
+}
+
+// Implements
+func (r *Authenticate) Replies() <-chan []byte {
+	return r.RepliesCh
 }
 
 func (r *Authenticate) writeLine(l string) error {
-	if _, err := r.Writer.Write([]byte(l + "\r\n")); err != nil {
-		return err
-	}
-	return r.Writer.Flush()
+	r.RepliesCh <- []byte(l + "\r\n")
+	return nil
 }
 
 func (r *Authenticate) cancel() error {

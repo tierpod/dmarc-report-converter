@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// Message flags, defined in RFC 3501 section 2.3.2.
+// System message flags, defined in RFC 3501 section 2.3.2.
 const (
 	SeenFlag     = "\\Seen"
 	AnsweredFlag = "\\Answered"
@@ -20,6 +20,15 @@ const (
 	DraftFlag    = "\\Draft"
 	RecentFlag   = "\\Recent"
 )
+
+// ImportantFlag is a message flag to signal that a message is likely important
+// to the user. This flag is defined in RFC 8457 section 2.
+const ImportantFlag = "$Important"
+
+// TryCreateFlag is a special flag in MailboxStatus.PermanentFlags indicating
+// that it is possible to create new keywords by attempting to store those
+// flags in the mailbox.
+const TryCreateFlag = "\\*"
 
 var flags = []string{
 	SeenFlag,
@@ -47,18 +56,17 @@ const (
 	MIMESpecifier = "MIME"
 )
 
-// Returns the canonical form of a flag. Flags are case-insensitive.
+// CanonicalFlag returns the canonical form of a flag. Flags are case-insensitive.
 //
 // If the flag is defined in RFC 3501, it returns the flag with the case of the
 // RFC. Otherwise, it returns the lowercase version of the flag.
 func CanonicalFlag(flag string) string {
-	flag = strings.ToLower(flag)
 	for _, f := range flags {
-		if strings.ToLower(f) == flag {
+		if strings.EqualFold(f, flag) {
 			return f
 		}
 	}
-	return flag
+	return strings.ToLower(flag)
 }
 
 func ParseParamList(fields []interface{}) (map[string]string, error) {
@@ -114,6 +122,11 @@ func encodeHeader(s string) string {
 	return mime.QEncoding.Encode("utf-8", s)
 }
 
+func stringLowered(i interface{}) (string, bool) {
+	s, ok := i.(string)
+	return strings.ToLower(s), ok
+}
+
 func parseHeaderParamList(fields []interface{}) (map[string]string, error) {
 	params, err := ParseParamList(fields)
 	if err != nil {
@@ -121,8 +134,14 @@ func parseHeaderParamList(fields []interface{}) (map[string]string, error) {
 	}
 
 	for k, v := range params {
+		if lower := strings.ToLower(k); lower != k {
+			delete(params, k)
+			k = lower
+		}
+
 		params[k], _ = decodeHeader(v)
 	}
+
 	return params, nil
 }
 
@@ -189,10 +208,13 @@ func (m *Message) Parse(fields []interface{}) error {
 	var k FetchItem
 	for i, f := range fields {
 		if i%2 == 0 { // It's a key
-			if kstr, ok := f.(string); !ok {
+			switch f := f.(type) {
+			case string:
+				k = FetchItem(strings.ToUpper(f))
+			case RawString:
+				k = FetchItem(strings.ToUpper(string(f)))
+			default:
 				return fmt.Errorf("cannot parse message: key is not a string, but a %T", f)
-			} else {
-				k = FetchItem(strings.ToUpper(kstr))
 			}
 		} else { // It's a value
 			m.Items[k] = nil
@@ -255,7 +277,7 @@ func (m *Message) Parse(fields []interface{}) error {
 
 func (m *Message) formatItem(k FetchItem) []interface{} {
 	v := m.Items[k]
-	var kk interface{} = string(k)
+	var kk interface{} = RawString(k)
 
 	switch k {
 	case FetchBody, FetchBodyStructure:
@@ -267,7 +289,7 @@ func (m *Message) formatItem(k FetchItem) []interface{} {
 	case FetchFlags:
 		flags := make([]interface{}, len(m.Flags))
 		for i, flag := range m.Flags {
-			flags[i] = Atom(flag)
+			flags[i] = RawString(flag)
 		}
 		v = flags
 	case FetchInternalDate:
@@ -312,12 +334,16 @@ func (m *Message) Format() []interface{} {
 	return fields
 }
 
-// Get the body section with the specified name. Returns nil if it's not found.
+// GetBody gets the body section with the specified name. Returns nil if it's not found.
 func (m *Message) GetBody(section *BodySectionName) Literal {
 	section = section.resp()
 
 	for s, body := range m.Body {
 		if section.Equal(s) {
+			if body == nil {
+				// Server can return nil, we need to treat as empty string per RFC 3501
+				body = bytes.NewReader(nil)
+			}
 			return body
 		}
 	}
@@ -454,13 +480,15 @@ func (section *BodySectionName) Equal(other *BodySectionName) bool {
 
 func (section *BodySectionName) resp() *BodySectionName {
 	resp := *section // Copy section
-	if resp.Peek != false {
+	if resp.Peek {
 		resp.Peek = false
 	}
 	if len(resp.Partial) == 2 {
 		resp.Partial = []int{resp.Partial[0]}
 	}
-	resp.value = ""
+	if !strings.HasPrefix(string(resp.value), string(FetchRFC822)) {
+		resp.value = ""
+	}
 	return &resp
 }
 
@@ -632,6 +660,11 @@ type Address struct {
 	HostName string
 }
 
+// Address returns the mailbox address (e.g. "foo@example.org").
+func (addr *Address) Address() string {
+	return addr.MailboxName + "@" + addr.HostName
+}
+
 // Parse an address from fields.
 func (addr *Address) Parse(fields []interface{}) error {
 	if len(fields) < 4 {
@@ -644,12 +677,18 @@ func (addr *Address) Parse(fields []interface{}) error {
 	if s, err := ParseString(fields[1]); err == nil {
 		addr.AtDomainList, _ = decodeHeader(s)
 	}
-	if s, err := ParseString(fields[2]); err == nil {
-		addr.MailboxName, _ = decodeHeader(s)
+
+	s, err := ParseString(fields[2])
+	if err != nil {
+		return errors.New("Mailbox name could not be parsed")
 	}
-	if s, err := ParseString(fields[3]); err == nil {
-		addr.HostName, _ = decodeHeader(s)
+	addr.MailboxName, _ = decodeHeader(s)
+
+	s, err = ParseString(fields[3])
+	if err != nil {
+		return errors.New("Host name could not be parsed")
 	}
+	addr.HostName, _ = decodeHeader(s)
 
 	return nil
 }
@@ -676,13 +715,11 @@ func (addr *Address) Format() []interface{} {
 
 // Parse an address list from fields.
 func ParseAddressList(fields []interface{}) (addrs []*Address) {
-	addrs = make([]*Address, len(fields))
-
-	for i, f := range fields {
+	for _, f := range fields {
 		if addrFields, ok := f.([]interface{}); ok {
 			addr := &Address{}
 			if err := addr.Parse(addrFields); err == nil {
-				addrs[i] = addr
+				addrs = append(addrs, addr)
 			}
 		}
 	}
@@ -691,14 +728,18 @@ func ParseAddressList(fields []interface{}) (addrs []*Address) {
 }
 
 // Format an address list to fields.
-func FormatAddressList(addrs []*Address) (fields []interface{}) {
-	fields = make([]interface{}, len(addrs))
+func FormatAddressList(addrs []*Address) interface{} {
+	if len(addrs) == 0 {
+		return nil
+	}
+
+	fields := make([]interface{}, len(addrs))
 
 	for i, addr := range addrs {
 		fields[i] = addr.Format()
 	}
 
-	return
+	return fields
 }
 
 // A message envelope, ie. message metadata from its headers.
@@ -768,18 +809,32 @@ func (e *Envelope) Parse(fields []interface{}) error {
 
 // Format an envelope to fields.
 func (e *Envelope) Format() (fields []interface{}) {
-	return []interface{}{
-		envelopeDateTime(e.Date),
-		encodeHeader(e.Subject),
+	fields = make([]interface{}, 0, 10)
+	fields = append(fields, envelopeDateTime(e.Date))
+	if e.Subject != "" {
+		fields = append(fields, encodeHeader(e.Subject))
+	} else {
+		fields = append(fields, nil)
+	}
+	fields = append(fields,
 		FormatAddressList(e.From),
 		FormatAddressList(e.Sender),
 		FormatAddressList(e.ReplyTo),
 		FormatAddressList(e.To),
 		FormatAddressList(e.Cc),
 		FormatAddressList(e.Bcc),
-		e.InReplyTo,
-		e.MessageId,
+	)
+	if e.InReplyTo != "" {
+		fields = append(fields, e.InReplyTo)
+	} else {
+		fields = append(fields, nil)
 	}
+	if e.MessageId != "" {
+		fields = append(fields, e.MessageId)
+	} else {
+		fields = append(fields, nil)
+	}
+	return fields
 }
 
 // A body structure.
@@ -787,9 +842,9 @@ func (e *Envelope) Format() (fields []interface{}) {
 type BodyStructure struct {
 	// Basic fields
 
-	// The MIME type.
+	// The MIME type (e.g. "text", "image")
 	MIMEType string
-	// The MIME subtype.
+	// The MIME subtype (e.g. "plain", "png")
 	MIMESubType string
 	// The MIME parameters.
 	Params map[string]string
@@ -878,6 +933,7 @@ func (bs *BodyStructure) Parse(fields []interface{}) error {
 			if disp, ok := fields[end].([]interface{}); ok && len(disp) >= 2 {
 				if s, ok := disp[0].(string); ok {
 					bs.Disposition, _ = decodeHeader(s)
+					bs.Disposition = strings.ToLower(bs.Disposition)
 				}
 				if params, ok := disp[1].([]interface{}); ok {
 					bs.DispositionParams, _ = parseHeaderParamList(params)
@@ -906,8 +962,8 @@ func (bs *BodyStructure) Parse(fields []interface{}) error {
 			return errors.New("Non-multipart body part doesn't have 7 fields")
 		}
 
-		bs.MIMEType, _ = fields[0].(string)
-		bs.MIMESubType, _ = fields[1].(string)
+		bs.MIMEType, _ = stringLowered(fields[0])
+		bs.MIMESubType, _ = stringLowered(fields[1])
 
 		params, _ := fields[2].([]interface{})
 		bs.Params, _ = parseHeaderParamList(params)
@@ -916,13 +972,13 @@ func (bs *BodyStructure) Parse(fields []interface{}) error {
 		if desc, err := ParseString(fields[4]); err == nil {
 			bs.Description, _ = decodeHeader(desc)
 		}
-		bs.Encoding, _ = fields[5].(string)
+		bs.Encoding, _ = stringLowered(fields[5])
 		bs.Size, _ = ParseNumber(fields[6])
 
 		end := 7
 
 		// Type-specific fields
-		if bs.MIMEType == "message" && bs.MIMESubType == "rfc822" {
+		if strings.EqualFold(bs.MIMEType, "message") && strings.EqualFold(bs.MIMESubType, "rfc822") {
 			if len(fields)-end < 3 {
 				return errors.New("Missing type-specific fields for message/rfc822")
 			}
@@ -939,7 +995,7 @@ func (bs *BodyStructure) Parse(fields []interface{}) error {
 
 			end += 3
 		}
-		if bs.MIMEType == "text" {
+		if strings.EqualFold(bs.MIMEType, "text") {
 			if len(fields)-end < 1 {
 				return errors.New("Missing type-specific fields for text/*")
 			}
@@ -960,6 +1016,7 @@ func (bs *BodyStructure) Parse(fields []interface{}) error {
 			if disp, ok := fields[end].([]interface{}); ok && len(disp) >= 2 {
 				if s, ok := disp[0].(string); ok {
 					bs.Disposition, _ = decodeHeader(s)
+					bs.Disposition = strings.ToLower(bs.Disposition)
 				}
 				if params, ok := disp[1].([]interface{}); ok {
 					bs.DispositionParams, _ = parseHeaderParamList(params)
@@ -989,7 +1046,7 @@ func (bs *BodyStructure) Parse(fields []interface{}) error {
 }
 
 func (bs *BodyStructure) Format() (fields []interface{}) {
-	if bs.MIMEType == "multipart" {
+	if strings.EqualFold(bs.MIMEType, "multipart") {
 		for _, part := range bs.Parts {
 			fields = append(fields, part.Format())
 		}
@@ -1036,7 +1093,7 @@ func (bs *BodyStructure) Format() (fields []interface{}) {
 		fields[6] = bs.Size
 
 		// Type-specific fields
-		if bs.MIMEType == "message" && bs.MIMESubType == "rfc822" {
+		if strings.EqualFold(bs.MIMEType, "message") && strings.EqualFold(bs.MIMESubType, "rfc822") {
 			var env interface{}
 			if bs.Envelope != nil {
 				env = bs.Envelope.Format()
@@ -1049,7 +1106,7 @@ func (bs *BodyStructure) Format() (fields []interface{}) {
 
 			fields = append(fields, env, bsbs, bs.Lines)
 		}
-		if bs.MIMEType == "text" {
+		if strings.EqualFold(bs.MIMEType, "text") {
 			fields = append(fields, bs.Lines)
 		}
 
@@ -1078,4 +1135,52 @@ func (bs *BodyStructure) Format() (fields []interface{}) {
 	}
 
 	return
+}
+
+// Filename parses the body structure's filename, if it's an attachment. An
+// empty string is returned if the filename isn't specified. An error is
+// returned if and only if a charset error occurs, in which case the undecoded
+// filename is returned too.
+func (bs *BodyStructure) Filename() (string, error) {
+	raw, ok := bs.DispositionParams["filename"]
+	if !ok {
+		// Using "name" in Content-Type is discouraged
+		raw = bs.Params["name"]
+	}
+	return decodeHeader(raw)
+}
+
+// BodyStructureWalkFunc is the type of the function called for each body
+// structure visited by BodyStructure.Walk. The path argument contains the IMAP
+// part path (see BodyPartName).
+//
+// The function should return true to visit all of the part's children or false
+// to skip them.
+type BodyStructureWalkFunc func(path []int, part *BodyStructure) (walkChildren bool)
+
+// Walk walks the body structure tree, calling f for each part in the tree,
+// including bs itself. The parts are visited in DFS pre-order.
+func (bs *BodyStructure) Walk(f BodyStructureWalkFunc) {
+	// Non-multipart messages only have part 1
+	if len(bs.Parts) == 0 {
+		f([]int{1}, bs)
+		return
+	}
+
+	bs.walk(f, nil)
+}
+
+func (bs *BodyStructure) walk(f BodyStructureWalkFunc, path []int) {
+	if !f(path, bs) {
+		return
+	}
+
+	for i, part := range bs.Parts {
+		num := i + 1
+
+		partPath := append([]int(nil), path...)
+		partPath = append(partPath, num)
+
+		part.walk(f, partPath)
+	}
 }

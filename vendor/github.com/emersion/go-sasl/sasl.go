@@ -12,7 +12,7 @@ import (
 
 // Common SASL errors.
 var (
-	ErrUnexpectedClientResponse = errors.New("sasl: unexpected client response")
+	ErrUnexpectedClientResponse  = errors.New("sasl: unexpected client response")
 	ErrUnexpectedServerChallenge = errors.New("sasl: unexpected server challenge")
 )
 

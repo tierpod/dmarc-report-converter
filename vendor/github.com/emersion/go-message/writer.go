@@ -2,46 +2,35 @@ package message
 
 import (
 	"errors"
+	"fmt"
 	"io"
-	"mime/multipart"
-	"net/textproto"
-	"sort"
 	"strings"
+
+	"github.com/emersion/go-message/textproto"
 )
 
-// From https://golang.org/src/mime/multipart/writer.go?s=2140:2215#L76
-func writeHeader(w io.Writer, header Header) error {
-	keys := make([]string, 0, len(header))
-	for k := range header {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		for _, v := range header[k] {
-			if _, err := io.WriteString(w, formatHeaderField(k, v)); err != nil {
-				return err
-			}
-		}
-	}
-	_, err := io.WriteString(w, "\r\n")
-	return err
-}
-
-// A Writer formats entities.
+// Writer writes message entities.
+//
+// If the message is not multipart, it should be used as a WriteCloser. Don't
+// forget to call Close.
+//
+// If the message is multipart, users can either use CreatePart to write child
+// parts or Write to directly pipe a multipart message. In any case, Close must
+// be called at the end.
 type Writer struct {
 	w  io.Writer
 	c  io.Closer
-	mw *multipart.Writer
+	mw *textproto.MultipartWriter
 }
 
-// newWriter creates a new Writer writing to w with the provided header. Nothing
-// is written to w when it is called. header is modified in-place.
-func newWriter(w io.Writer, header Header) *Writer {
+// createWriter creates a new Writer writing to w with the provided header.
+// Nothing is written to w when it is called. header is modified in-place.
+func createWriter(w io.Writer, header *Header) (*Writer, error) {
 	ww := &Writer{w: w}
 
 	mediaType, mediaParams, _ := header.ContentType()
 	if strings.HasPrefix(mediaType, "multipart/") {
-		ww.mw = multipart.NewWriter(ww.w)
+		ww.mw = textproto.NewMultipartWriter(ww.w)
 
 		// Do not set ww's io.Closer for now: if this is a multipart entity but
 		// CreatePart is not used (only Write is used), then the final boundary
@@ -57,19 +46,43 @@ func newWriter(w io.Writer, header Header) *Writer {
 
 		header.Del("Content-Transfer-Encoding")
 	} else {
-		wc := encodingWriter(header.Get("Content-Transfer-Encoding"), ww.w)
+		wc, err := encodingWriter(header.Get("Content-Transfer-Encoding"), ww.w)
+		if err != nil {
+			return nil, err
+		}
 		ww.w = wc
 		ww.c = wc
 	}
 
-	return ww
+	switch strings.ToLower(mediaParams["charset"]) {
+	case "", "us-ascii", "utf-8":
+		// This is OK
+	default:
+		// Anything else is invalid
+		return nil, fmt.Errorf("unhandled charset %q", mediaParams["charset"])
+	}
+
+	return ww, nil
 }
 
-// CreateWriter creates a new Writer writing to w. If header contains an
+// CreateWriter creates a new message writer to w. If header contains an
 // encoding, data written to the Writer will automatically be encoded with it.
+// The charset needs to be utf-8 or us-ascii.
 func CreateWriter(w io.Writer, header Header) (*Writer, error) {
-	ww := newWriter(w, header)
-	if err := writeHeader(w, header); err != nil {
+
+	// ensure that modifications are invisible to the caller
+	header = header.Copy()
+
+	// If the message uses MIME, it has to include MIME-Version
+	if !header.Has("Mime-Version") {
+		header.Set("MIME-Version", "1.0")
+	}
+
+	ww, err := createWriter(w, &header)
+	if err != nil {
+		return nil, err
+	}
+	if err := textproto.WriteHeader(w, header.Header); err != nil {
 		return nil, err
 	}
 	return ww, nil
@@ -105,8 +118,14 @@ func (w *Writer) CreatePart(header Header) (*Writer, error) {
 	// cw -> ww -> pw -> w.mw -> w.w
 
 	ww := &struct{ io.Writer }{nil}
-	cw := newWriter(ww, header)
-	pw, err := w.mw.CreatePart(textproto.MIMEHeader(header))
+
+	// ensure that modifications are invisible to the caller
+	header = header.Copy()
+	cw, err := createWriter(ww, &header)
+	if err != nil {
+		return nil, err
+	}
+	pw, err := w.mw.CreatePart(header.Header)
 	if err != nil {
 		return nil, err
 	}

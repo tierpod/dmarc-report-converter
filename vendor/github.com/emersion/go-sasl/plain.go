@@ -38,7 +38,7 @@ func NewPlainClient(identity, username, password string) Client {
 type PlainAuthenticator func(identity, username, password string) error
 
 type plainServer struct {
-	done bool
+	done         bool
 	authenticate PlainAuthenticator
 }
 

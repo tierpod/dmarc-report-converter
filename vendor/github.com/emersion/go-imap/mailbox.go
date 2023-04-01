@@ -12,11 +12,11 @@ import (
 // The primary mailbox, as defined in RFC 3501 section 5.1.
 const InboxName = "INBOX"
 
-// Returns the canonical form of a mailbox name. Mailbox names can be
+// CanonicalMailboxName returns the canonical form of a mailbox name. Mailbox names can be
 // case-sensitive or case-insensitive depending on the backend implementation.
 // The special INBOX mailbox is case-insensitive.
 func CanonicalMailboxName(name string) string {
-	if strings.ToUpper(name) == InboxName {
+	if strings.EqualFold(name, InboxName) {
 		return InboxName
 	}
 	return name
@@ -37,6 +37,41 @@ const (
 	// the mailbox was selected.
 	UnmarkedAttr = "\\Unmarked"
 )
+
+// Mailbox attributes defined in RFC 6154 section 2 (SPECIAL-USE extension).
+const (
+	// This mailbox presents all messages in the user's message store.
+	AllAttr = "\\All"
+	// This mailbox is used to archive messages.
+	ArchiveAttr = "\\Archive"
+	// This mailbox is used to hold draft messages -- typically, messages that are
+	// being composed but have not yet been sent.
+	DraftsAttr = "\\Drafts"
+	// This mailbox presents all messages marked in some way as "important".
+	FlaggedAttr = "\\Flagged"
+	// This mailbox is where messages deemed to be junk mail are held.
+	JunkAttr = "\\Junk"
+	// This mailbox is used to hold copies of messages that have been sent.
+	SentAttr = "\\Sent"
+	// This mailbox is used to hold messages that have been deleted or marked for
+	// deletion.
+	TrashAttr = "\\Trash"
+)
+
+// Mailbox attributes defined in RFC 3348 (CHILDREN extension)
+const (
+	// The presence of this attribute indicates that the mailbox has child
+	// mailboxes.
+	HasChildrenAttr = "\\HasChildren"
+	// The presence of this attribute indicates that the mailbox has no child
+	// mailboxes.
+	HasNoChildrenAttr = "\\HasNoChildren"
+)
+
+// This mailbox attribute is a signal that the mailbox contains messages that
+// are likely important to the user. This attribute is defined in RFC 8457
+// section 3.
+const ImportantAttr = "\\Important"
 
 // Basic mailbox info.
 type MailboxInfo struct {
@@ -61,7 +96,11 @@ func (info *MailboxInfo) Parse(fields []interface{}) error {
 
 	var ok bool
 	if info.Delimiter, ok = fields[1].(string); !ok {
-		return errors.New("Mailbox delimiter must be a string")
+		// The delimiter may be specified as NIL, which gets converted to a nil interface.
+		if fields[1] != nil {
+			return errors.New("Mailbox delimiter must be a string")
+		}
+		info.Delimiter = ""
 	}
 
 	if name, err := ParseString(fields[2]); err != nil {
@@ -80,10 +119,19 @@ func (info *MailboxInfo) Format() []interface{} {
 	name, _ := utf7.Encoding.NewEncoder().String(info.Name)
 	attrs := make([]interface{}, len(info.Attributes))
 	for i, attr := range info.Attributes {
-		attrs[i] = Atom(attr)
+		attrs[i] = RawString(attr)
 	}
+
+	// If the delimiter is NIL, we need to treat it specially by inserting
+	// a nil field (so that it's later converted to an unquoted NIL atom).
+	var del interface{}
+
+	if info.Delimiter != "" {
+		del = info.Delimiter
+	}
+
 	// Thunderbird doesn't understand delimiters if not quoted
-	return []interface{}{attrs, Quoted(info.Delimiter), name}
+	return []interface{}{attrs, del, FormatMailboxName(name)}
 }
 
 // TODO: optimize this
@@ -123,12 +171,12 @@ func (info *MailboxInfo) match(name, pattern string) bool {
 func (info *MailboxInfo) Match(reference, pattern string) bool {
 	name := info.Name
 
-	if strings.HasPrefix(pattern, info.Delimiter) {
+	if info.Delimiter != "" && strings.HasPrefix(pattern, info.Delimiter) {
 		reference = ""
 		pattern = strings.TrimPrefix(pattern, info.Delimiter)
 	}
 	if reference != "" {
-		if !strings.HasSuffix(reference, info.Delimiter) {
+		if info.Delimiter != "" && !strings.HasSuffix(reference, info.Delimiter) {
 			reference += info.Delimiter
 		}
 		if !strings.HasPrefix(name, reference) {
@@ -173,6 +221,10 @@ type MailboxStatus struct {
 	// Together with a UID, it is a unique identifier for a message.
 	// Must be greater than or equal to 1.
 	UidValidity uint32
+
+	// Per-mailbox limit of message size. Set only if server supports the
+	// APPENDLIMIT extension.
+	AppendLimit uint32
 }
 
 // Create a new mailbox status that will contain the specified items.
@@ -215,6 +267,8 @@ func (status *MailboxStatus) Parse(fields []interface{}) error {
 				status.UidNext, err = ParseNumber(f)
 			case StatusUidValidity:
 				status.UidValidity, err = ParseNumber(f)
+			case StatusAppendLimit:
+				status.AppendLimit, err = ParseNumber(f)
 			default:
 				status.Items[k] = f
 			}
@@ -242,9 +296,19 @@ func (status *MailboxStatus) Format() []interface{} {
 			v = status.UidNext
 		case StatusUidValidity:
 			v = status.UidValidity
+		case StatusAppendLimit:
+			v = status.AppendLimit
 		}
 
-		fields = append(fields, string(k), v)
+		fields = append(fields, RawString(k), v)
 	}
 	return fields
+}
+
+func FormatMailboxName(name string) interface{} {
+	// Some e-mails servers don't handle quoted INBOX names correctly so we special-case it.
+	if strings.EqualFold(name, "INBOX") {
+		return RawString(name)
+	}
+	return name
 }

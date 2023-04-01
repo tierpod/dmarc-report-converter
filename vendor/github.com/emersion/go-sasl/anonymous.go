@@ -27,7 +27,7 @@ func NewAnonymousClient(trace string) Client {
 type AnonymousAuthenticator func(trace string) error
 
 type anonymousServer struct {
-	done bool
+	done         bool
 	authenticate AnonymousAuthenticator
 }
 

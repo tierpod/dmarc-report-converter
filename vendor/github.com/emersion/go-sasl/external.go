@@ -1,5 +1,10 @@
 package sasl
 
+import (
+	"bytes"
+	"errors"
+)
+
 // The EXTERNAL mechanism name.
 const External = "EXTERNAL"
 
@@ -23,4 +28,40 @@ func (a *externalClient) Next(challenge []byte) (response []byte, err error) {
 // authentication credentials.
 func NewExternalClient(identity string) Client {
 	return &externalClient{identity}
+}
+
+// ExternalAuthenticator authenticates users with the EXTERNAL mechanism. If
+// the identity is left blank, it indicates that it is the same as the one used
+// in the external credentials. If identity is not empty and the server doesn't
+// support it, an error must be returned.
+type ExternalAuthenticator func(identity string) error
+
+type externalServer struct {
+	done         bool
+	authenticate ExternalAuthenticator
+}
+
+func (a *externalServer) Next(response []byte) (challenge []byte, done bool, err error) {
+	if a.done {
+		return nil, false, ErrUnexpectedClientResponse
+	}
+
+	// No initial response, send an empty challenge
+	if response == nil {
+		return []byte{}, false, nil
+	}
+
+	a.done = true
+
+	if bytes.Contains(response, []byte("\x00")) {
+		return nil, false, errors.New("identity contains a NUL character")
+	}
+
+	return nil, true, a.authenticate(string(response))
+}
+
+// NewExternalServer creates a server implementation of the EXTERNAL
+// authentication mechanism, as described in RFC 4422.
+func NewExternalServer(authenticator ExternalAuthenticator) Server {
+	return &externalServer{authenticate: authenticator}
 }
