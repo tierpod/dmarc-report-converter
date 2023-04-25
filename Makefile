@@ -9,6 +9,8 @@ GIT_VER    := $(shell basename $(GITHUB_REF))-$(shell date +%Y%m%d)
 endif
 LDFLAGS    := -ldflags "-X main.version=$(GIT_VER)"
 
+CGO_ENABLED := 0
+
 .PHONY: test
 test:
 	find ./cmd ./pkg -type f -name '*.go' | xargs gofmt -l -e
@@ -20,7 +22,7 @@ test:
 build: test $(NAME)
 
 bin/$(NAME):
-	go build -mod=vendor -v $(LDFLAGS) -o $@ ./cmd/$(NAME)
+	CGO_ENABLED=$(CGO_ENABLED) go build -mod=vendor -v $(LDFLAGS) -o $@ ./cmd/$(NAME)
 
 .PHONY: clean
 clean:
