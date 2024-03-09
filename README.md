@@ -185,17 +185,17 @@ Building from sources
 2. Download sources:
 
    ```bash
-   go get -u github.com/tierpod/dmarc-report-converter
+   git clone https://github.com/tierpod/dmarc-report-converter.git
    ```
 
 3. Build binary and create installation archive:
 
    ```bash
-   cd $HOME/go/src/github.com/tierpod/dmarc-report-converter
+   cd dmarc-report-converter
    make release
    ```
 
-4. Installation archive will be places inside _release_ directory. Also, if you want to test
+4. Installation archive will be places inside _dist_ directory. Also, if you want to test
    dmarc-report-converter without installation, you can execute:
 
    ```bash
