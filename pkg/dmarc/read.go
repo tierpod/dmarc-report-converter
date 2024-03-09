@@ -6,7 +6,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -25,7 +24,7 @@ const (
 // ReadParseXML reads xml data from r and parses it to Report struct. If lookupAddr is
 // true, performs a reverse lookups for feedback>record>row>source_ip
 func ReadParseXML(r io.Reader, lookupAddr bool) (Report, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return Report{}, err
 	}
@@ -46,7 +45,7 @@ func ReadParseGZIP(r io.Reader, lookupAddr bool) (Report, error) {
 	// unpack and check mimetype again
 	buf := bytes.NewBuffer(nil)
 	teer := io.TeeReader(gr, buf)
-	data, err := ioutil.ReadAll(teer)
+	data, err := io.ReadAll(teer)
 	if err != nil {
 		return Report{}, err
 	}
@@ -65,7 +64,7 @@ func ReadParseGZIP(r io.Reader, lookupAddr bool) (Report, error) {
 // ReadParseZIP reads zipped xml data from r and parses it to Report struct. If lookupAddr is
 // true, performs a reverse lookups for feedback>record>row>source_ip
 func ReadParseZIP(r io.Reader, lookupAddr bool) (Report, error) {
-	zipBytes, err := ioutil.ReadAll(r)
+	zipBytes, err := io.ReadAll(r)
 	if err != nil {
 		return Report{}, err
 	}
@@ -103,7 +102,7 @@ func ReadParseZIP(r io.Reader, lookupAddr bool) (Report, error) {
 // Report struct (if mimetype is supported).
 // If lookupAddr is true, performs reverse lookups for feedback>record>row>source_ip
 func ReadParse(r io.Reader, lookupAddr bool) (Report, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return Report{}, err
 	}
