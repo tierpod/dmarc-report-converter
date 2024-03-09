@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -62,7 +62,7 @@ func (o *Output) isStdout() bool {
 func loadConfig(path string) (*config, error) {
 	var c config
 
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func loadConfig(path string) (*config, error) {
 		if c.Output.ExternalTemplate == "" {
 			return nil, fmt.Errorf("'output.external_template' must be configured to use external_template output")
 		}
-		data, err := ioutil.ReadFile(c.Output.ExternalTemplate)
+		data, err := os.ReadFile(c.Output.ExternalTemplate)
 		if err != nil {
 			return nil, err
 		}
