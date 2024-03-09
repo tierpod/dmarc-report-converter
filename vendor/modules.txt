@@ -6,6 +6,7 @@ github.com/emersion/go-imap/responses
 github.com/emersion/go-imap/utf7
 # github.com/emersion/go-message v0.18.0
 github.com/emersion/go-message
+github.com/emersion/go-message/charset
 github.com/emersion/go-message/mail
 github.com/emersion/go-message/textproto
 # github.com/emersion/go-sasl v0.0.0-20231106173351-e73c9f7bad43
@@ -16,7 +17,22 @@ github.com/emersion/go-textwrapper
 github.com/hashicorp/logutils
 # golang.org/x/text v0.14.0
 golang.org/x/text/encoding
+golang.org/x/text/encoding/charmap
+golang.org/x/text/encoding/htmlindex
+golang.org/x/text/encoding/ianaindex
+golang.org/x/text/encoding/internal
 golang.org/x/text/encoding/internal/identifier
+golang.org/x/text/encoding/japanese
+golang.org/x/text/encoding/korean
+golang.org/x/text/encoding/simplifiedchinese
+golang.org/x/text/encoding/traditionalchinese
+golang.org/x/text/encoding/unicode
+golang.org/x/text/internal/language
+golang.org/x/text/internal/language/compact
+golang.org/x/text/internal/tag
+golang.org/x/text/internal/utf8internal
+golang.org/x/text/language
+golang.org/x/text/runes
 golang.org/x/text/transform
 # gopkg.in/yaml.v2 v2.4.0
 gopkg.in/yaml.v2
