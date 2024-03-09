@@ -54,6 +54,37 @@ func (c *filesConverter) ConvertWrite() error {
 }
 
 func (c *filesConverter) find() error {
+	emlFiles, err := filepath.Glob(filepath.Join(c.cfg.Input.Dir, "*.eml"))
+	if err != nil {
+		return err
+	}
+	if len(emlFiles) > 0 {
+		log.Printf("[INFO] files: found %d eml file(s), extract attachments to %v", len(emlFiles), c.cfg.Input.Dir)
+		for _, eml := range emlFiles {
+			br, err := os.Open(eml)
+			if err != nil {
+				log.Printf("[ERROR] files: unable to extract attachments from %v", eml)
+				continue
+			}
+
+			isSuccess, err := extractAttachment(br, c.cfg.Input.Dir)
+			if err != nil {
+				log.Printf("[ERROR] files: %v, skip", err)
+				continue
+			}
+
+			if isSuccess && c.cfg.Input.Delete {
+				log.Printf("[DEBUG] files: delete %v", eml)
+				err := os.Remove(eml)
+				if err != nil {
+					log.Printf("[ERROR] files: %v", err)
+					continue
+				}
+			}
+			br.Close()
+		}
+	}
+
 	files, err := filepath.Glob(filepath.Join(c.cfg.Input.Dir, "*.*"))
 	if err != nil {
 		return err

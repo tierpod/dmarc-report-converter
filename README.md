@@ -15,6 +15,9 @@ Support input formats:
 
 * **.zip** file: zipped dmarc report in xml format
 
+* **.eml** file: an electronic mail format or email saved in plain text - dovecot-report-converter
+  tries to extract .xml, .gz or .zip attachments from found eml files to `input.dir`
+
 Support output formats:
 
 * **html_static** output file is a HTML, generated from builtin template htmlStaticTmpl (consts.go).

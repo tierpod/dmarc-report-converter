@@ -86,53 +86,10 @@ func fetchIMAPAttachments(cfg *config) error {
 			return fmt.Errorf("server didn't return message body")
 		}
 
-		// create a new mail reader
-		mr, err := mail.CreateReader(br)
+		isSuccess, err := extractAttachment(br, cfg.Input.Dir)
 		if err != nil {
-			return err
-		}
-
-		// process each message's part
-		isSuccess := false
-		for {
-			p, err := mr.NextPart()
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				log.Printf("[ERROR] imap: can't read next part: %v, skip", err)
-				break
-			}
-
-			switch h := p.Header.(type) {
-			case *mail.AttachmentHeader:
-				// this is an attachment
-				filename, err := h.Filename()
-				if err != nil {
-					log.Printf("[ERROR] imap: %v, skip", err)
-					continue
-				}
-				log.Printf("[INFO] imap: found attachment: %v", filename)
-
-				outFile := filepath.Join(cfg.Input.Dir, filename)
-				log.Printf("[INFO] imap: save attachment to: %v", outFile)
-				f, err := os.Create(outFile)
-				if err != nil {
-					log.Printf("[ERROR] imap: %v, skip", err)
-					continue
-				}
-
-				_, err = io.Copy(f, p.Body)
-				if err != nil {
-					log.Printf("[ERROR] imap: %v, skip", err)
-					continue
-				}
-				err = f.Close()
-				if err != nil {
-					log.Printf("[ERROR] imap: %v, skip", err)
-					continue
-				}
-				isSuccess = true
-			}
+			log.Printf("[ERROR] imap: %v, skip", err)
+			continue
 		}
 
 		if isSuccess && cfg.Input.IMAP.Delete {
@@ -167,4 +124,62 @@ func fetchIMAPAttachments(cfg *config) error {
 	}
 
 	return nil
+}
+
+func extractAttachment(r io.Reader, inputDir string) (bool, error) {
+	// Create a new mail reader
+	mr, err := mail.CreateReader(r)
+	if err != nil {
+		return false, err
+	}
+
+	// process each message's part
+	isSuccess := false
+	for {
+		p, err := mr.NextPart()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			log.Printf("[ERROR] imap: can't read next part: %v, skip", err)
+			break
+		}
+
+		switch h := p.Header.(type) {
+		case *mail.AttachmentHeader:
+			// this is an attachment
+			filename, err := h.Filename()
+			if err != nil {
+				log.Printf("[ERROR] extractAttachment: %v, skip", err)
+				continue
+			}
+			if filename == "" {
+				log.Printf("[WARN] extractAttachment: found attachment with empty filename, skip")
+				continue
+			}
+
+			log.Printf("[INFO] extractAttachment: found attachment: %v", filename)
+
+			outFile := filepath.Join(inputDir, filename)
+			log.Printf("[INFO] extractAttachment: save attachment to: %v", outFile)
+			f, err := os.Create(outFile)
+			if err != nil {
+				log.Printf("[ERROR] extractAttachment: %v, skip", err)
+				continue
+			}
+
+			_, err = io.Copy(f, p.Body)
+			if err != nil {
+				log.Printf("[ERROR] extractAttachment: %v, skip", err)
+				continue
+			}
+			err = f.Close()
+			if err != nil {
+				log.Printf("[ERROR] extractAttachment: %v, skip", err)
+				continue
+			}
+			isSuccess = true
+		}
+	}
+
+	return isSuccess, err
 }
