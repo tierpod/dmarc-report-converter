@@ -84,7 +84,7 @@ func (a *oauthBearerServer) fail(descr string) ([]byte, bool, error) {
 	if err != nil {
 		panic(err) // wtf
 	}
-	a.failErr = errors.New(descr)
+	a.failErr = errors.New("sasl: client error: " + descr)
 	return blob, false, nil
 }
 
@@ -98,7 +98,7 @@ func (a *oauthBearerServer) Next(response []byte) (challenge []byte, done bool, 
 		// indirectly OAUTHBEARER) defines a protocol-independent way to do so
 		// using 0x01.
 		if len(response) != 1 && response[0] != 0x01 {
-			return nil, true, errors.New("unexpected response")
+			return nil, true, errors.New("sasl: invalid response")
 		}
 		return nil, true, a.failErr
 	}

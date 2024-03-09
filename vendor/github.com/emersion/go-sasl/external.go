@@ -54,7 +54,7 @@ func (a *externalServer) Next(response []byte) (challenge []byte, done bool, err
 	a.done = true
 
 	if bytes.Contains(response, []byte("\x00")) {
-		return nil, false, errors.New("identity contains a NUL character")
+		return nil, false, errors.New("sasl: identity contains a NUL character")
 	}
 
 	return nil, true, a.authenticate(string(response))

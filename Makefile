@@ -19,7 +19,7 @@ test:
 	go test -mod=vendor ./cmd/... ./pkg/...
 
 .PHONY: build
-build: test $(NAME)
+build: test bin/$(NAME)
 
 bin/$(NAME):
 	CGO_ENABLED=$(CGO_ENABLED) go build -mod=vendor -v $(LDFLAGS) -o $@ ./cmd/$(NAME)

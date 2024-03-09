@@ -57,7 +57,7 @@ func (a *plainServer) Next(response []byte) (challenge []byte, done bool, err er
 
 	parts := bytes.Split(response, []byte("\x00"))
 	if len(parts) != 3 {
-		err = errors.New("Invalid response")
+		err = errors.New("sasl: invalid response")
 		return
 	}
 

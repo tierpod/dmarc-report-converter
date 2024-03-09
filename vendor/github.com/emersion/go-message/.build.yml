@@ -1,4 +1,4 @@
-image: alpine/edge
+image: alpine/latest
 packages:
   - go
 sources:
@@ -15,3 +15,6 @@ tasks:
   - coverage: |
       cd go-message
       go tool cover -html=coverage.txt -o ~/coverage.html
+  - gofmt: |
+      cd go-message
+      test -z $(gofmt -l .)

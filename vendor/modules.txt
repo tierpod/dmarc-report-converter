@@ -4,17 +4,17 @@ github.com/emersion/go-imap/client
 github.com/emersion/go-imap/commands
 github.com/emersion/go-imap/responses
 github.com/emersion/go-imap/utf7
-# github.com/emersion/go-message v0.16.0
+# github.com/emersion/go-message v0.18.0
 github.com/emersion/go-message
 github.com/emersion/go-message/mail
 github.com/emersion/go-message/textproto
-# github.com/emersion/go-sasl v0.0.0-20220912192320-0145f2c60ead
+# github.com/emersion/go-sasl v0.0.0-20231106173351-e73c9f7bad43
 github.com/emersion/go-sasl
 # github.com/emersion/go-textwrapper v0.0.0-20200911093747-65d896831594
 github.com/emersion/go-textwrapper
 # github.com/hashicorp/logutils v1.0.0
 github.com/hashicorp/logutils
-# golang.org/x/text v0.8.0
+# golang.org/x/text v0.14.0
 golang.org/x/text/encoding
 golang.org/x/text/encoding/internal/identifier
 golang.org/x/text/transform
