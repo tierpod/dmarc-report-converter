@@ -8,9 +8,15 @@ import (
 	"github.com/emersion/go-imap/responses"
 )
 
-// ErrNoMailboxSelected is returned if a command that requires a mailbox to be
-// selected is called when there isn't.
-var ErrNoMailboxSelected = errors.New("No mailbox selected")
+var (
+	// ErrNoMailboxSelected is returned if a command that requires a mailbox to be
+	// selected is called when there isn't.
+	ErrNoMailboxSelected = errors.New("No mailbox selected")
+
+	// ErrExtensionUnsupported is returned if a command uses a extension that
+	// is not supported by the server.
+	ErrExtensionUnsupported = errors.New("The required extension is not supported by the server")
+)
 
 // Check requests a checkpoint of the currently selected mailbox. A checkpoint
 // refers to any implementation-dependent housekeeping associated with the
@@ -63,6 +69,10 @@ func (c *Client) Terminate() error {
 // the currently selected mailbox. If ch is not nil, sends sequence IDs of each
 // deleted message to this channel.
 func (c *Client) Expunge(ch chan uint32) error {
+	if ch != nil {
+		defer close(ch)
+	}
+
 	if c.State() != imap.SelectedState {
 		return ErrNoMailboxSelected
 	}
@@ -72,7 +82,6 @@ func (c *Client) Expunge(ch chan uint32) error {
 	var h responses.Handler
 	if ch != nil {
 		h = &responses.Expunge{SeqNums: ch}
-		defer close(ch)
 	}
 
 	status, err := c.execute(cmd, h)
@@ -88,8 +97,7 @@ func (c *Client) executeSearch(uid bool, criteria *imap.SearchCriteria, charset 
 		return
 	}
 
-	var cmd imap.Commander
-	cmd = &commands.Search{
+	var cmd imap.Commander = &commands.Search{
 		Charset:  charset,
 		Criteria: criteria,
 	}
@@ -123,7 +131,8 @@ func (c *Client) search(uid bool, criteria *imap.SearchCriteria) (ids []uint32, 
 // match the searching criteria. When multiple keys are specified, the result is
 // the intersection (AND function) of all the messages that match those keys.
 // Criteria must be UTF-8 encoded. See RFC 3501 section 6.4.4 for a list of
-// searching criteria.
+// searching criteria. When no criteria has been set, all messages in the mailbox
+// will be searched using ALL criteria.
 func (c *Client) Search(criteria *imap.SearchCriteria) (seqNums []uint32, err error) {
 	return c.search(false, criteria)
 }
@@ -135,14 +144,13 @@ func (c *Client) UidSearch(criteria *imap.SearchCriteria) (uids []uint32, err er
 }
 
 func (c *Client) fetch(uid bool, seqset *imap.SeqSet, items []imap.FetchItem, ch chan *imap.Message) error {
+	defer close(ch)
+
 	if c.State() != imap.SelectedState {
 		return ErrNoMailboxSelected
 	}
 
-	defer close(ch)
-
-	var cmd imap.Commander
-	cmd = &commands.Fetch{
+	var cmd imap.Commander = &commands.Fetch{
 		SeqSet: seqset,
 		Items:  items,
 	}
@@ -150,7 +158,7 @@ func (c *Client) fetch(uid bool, seqset *imap.SeqSet, items []imap.FetchItem, ch
 		cmd = &commands.Uid{Cmd: cmd}
 	}
 
-	res := &responses.Fetch{Messages: ch}
+	res := &responses.Fetch{Messages: ch, SeqSet: seqset, Uid: uid}
 
 	status, err := c.execute(cmd, res)
 	if err != nil {
@@ -172,6 +180,10 @@ func (c *Client) UidFetch(seqset *imap.SeqSet, items []imap.FetchItem, ch chan *
 }
 
 func (c *Client) store(uid bool, seqset *imap.SeqSet, item imap.StoreItem, value interface{}, ch chan *imap.Message) error {
+	if ch != nil {
+		defer close(ch)
+	}
+
 	if c.State() != imap.SelectedState {
 		return ErrNoMailboxSelected
 	}
@@ -180,7 +192,7 @@ func (c *Client) store(uid bool, seqset *imap.SeqSet, item imap.StoreItem, value
 	if fields, ok := value.([]interface{}); ok {
 		for i, field := range fields {
 			if s, ok := field.(string); ok {
-				fields[i] = imap.Atom(s)
+				fields[i] = imap.RawString(s)
 			}
 		}
 	}
@@ -194,8 +206,7 @@ func (c *Client) store(uid bool, seqset *imap.SeqSet, item imap.StoreItem, value
 		}
 	}
 
-	var cmd imap.Commander
-	cmd = &commands.Store{
+	var cmd imap.Commander = &commands.Store{
 		SeqSet: seqset,
 		Item:   item,
 		Value:  value,
@@ -206,8 +217,7 @@ func (c *Client) store(uid bool, seqset *imap.SeqSet, item imap.StoreItem, value
 
 	var h responses.Handler
 	if ch != nil {
-		h = &responses.Fetch{Messages: ch}
-		defer close(ch)
+		h = &responses.Fetch{Messages: ch, SeqSet: seqset, Uid: uid}
 	}
 
 	status, err := c.execute(cmd, h)
@@ -260,4 +270,98 @@ func (c *Client) Copy(seqset *imap.SeqSet, dest string) error {
 // identifiers instead of message sequence numbers.
 func (c *Client) UidCopy(seqset *imap.SeqSet, dest string) error {
 	return c.copy(true, seqset, dest)
+}
+
+func (c *Client) move(uid bool, seqset *imap.SeqSet, dest string) error {
+	if c.State() != imap.SelectedState {
+		return ErrNoMailboxSelected
+	}
+
+	if ok, err := c.Support("MOVE"); err != nil {
+		return err
+	} else if !ok {
+		return c.moveFallback(uid, seqset, dest)
+	}
+
+	var cmd imap.Commander = &commands.Move{
+		SeqSet:  seqset,
+		Mailbox: dest,
+	}
+	if uid {
+		cmd = &commands.Uid{Cmd: cmd}
+	}
+
+	if status, err := c.Execute(cmd, nil); err != nil {
+		return err
+	} else {
+		return status.Err()
+	}
+}
+
+// moveFallback uses COPY, STORE and EXPUNGE for servers which don't support
+// MOVE.
+func (c *Client) moveFallback(uid bool, seqset *imap.SeqSet, dest string) error {
+	item := imap.FormatFlagsOp(imap.AddFlags, true)
+	flags := []interface{}{imap.DeletedFlag}
+	if uid {
+		if err := c.UidCopy(seqset, dest); err != nil {
+			return err
+		}
+
+		if err := c.UidStore(seqset, item, flags, nil); err != nil {
+			return err
+		}
+	} else {
+		if err := c.Copy(seqset, dest); err != nil {
+			return err
+		}
+
+		if err := c.Store(seqset, item, flags, nil); err != nil {
+			return err
+		}
+	}
+
+	return c.Expunge(nil)
+}
+
+// Move moves the specified message(s) to the end of the specified destination
+// mailbox.
+//
+// If the server doesn't support the MOVE extension defined in RFC 6851,
+// go-imap will fallback to copy, store and expunge.
+func (c *Client) Move(seqset *imap.SeqSet, dest string) error {
+	return c.move(false, seqset, dest)
+}
+
+// UidMove is identical to Move, but seqset is interpreted as containing unique
+// identifiers instead of message sequence numbers.
+func (c *Client) UidMove(seqset *imap.SeqSet, dest string) error {
+	return c.move(true, seqset, dest)
+}
+
+// Unselect frees server's resources associated with the selected mailbox and
+// returns the server to the authenticated state. This command performs the same
+// actions as Close, except that no messages are permanently removed from the
+// currently selected mailbox.
+//
+// If client does not support the UNSELECT extension, ErrExtensionUnsupported
+// is returned.
+func (c *Client) Unselect() error {
+	if ok, err := c.Support("UNSELECT"); !ok || err != nil {
+		return ErrExtensionUnsupported
+	}
+
+	if c.State() != imap.SelectedState {
+		return ErrNoMailboxSelected
+	}
+
+	cmd := &commands.Unselect{}
+	if status, err := c.Execute(cmd, nil); err != nil {
+		return err
+	} else if err := status.Err(); err != nil {
+		return err
+	}
+
+	c.SetState(imap.AuthenticatedState, nil)
+	return nil
 }

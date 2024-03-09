@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"strconv"
-	"strings"
 	"time"
 	"unicode"
 )
@@ -15,10 +15,8 @@ type flusher interface {
 }
 
 type (
-	// A string that will be quoted.
-	Quoted string
-	// A raw atom.
-	Atom string
+	// A raw string.
+	RawString string
 )
 
 type WriterTo interface {
@@ -52,6 +50,8 @@ func isAscii(s string) bool {
 type Writer struct {
 	io.Writer
 
+	AllowAsyncLiterals bool
+
 	continues <-chan bool
 }
 
@@ -77,26 +77,18 @@ func (w *Writer) writeQuoted(s string) error {
 	return w.writeString(strconv.Quote(s))
 }
 
-func (w *Writer) writeAtom(s string) error {
-	return w.writeString(s)
-}
-
-func (w *Writer) writeAstring(s string) error {
+func (w *Writer) writeQuotedOrLiteral(s string) error {
 	if !isAscii(s) {
 		// IMAP doesn't allow 8-bit data outside literals
 		return w.writeLiteral(bytes.NewBufferString(s))
 	}
 
-	if strings.ToUpper(s) == nilAtom || s == "" || strings.ContainsAny(s, atomSpecials) {
-		return w.writeQuoted(s)
-	}
-
-	return w.writeAtom(s)
+	return w.writeQuoted(s)
 }
 
 func (w *Writer) writeDateTime(t time.Time, layout string) error {
 	if t.IsZero() {
-		return w.writeAtom(nilAtom)
+		return w.writeString(nilAtom)
 	}
 	return w.writeQuoted(t.Format(layout))
 }
@@ -129,18 +121,35 @@ func (w *Writer) writeList(fields []interface{}) error {
 	return w.writeString(string(listEnd))
 }
 
+// LiteralLengthErr is returned when the Len() of the Literal object does not
+// match the actual length of the byte stream.
+type LiteralLengthErr struct {
+	Actual   int
+	Expected int
+}
+
+func (e LiteralLengthErr) Error() string {
+	return fmt.Sprintf("imap: size of Literal is not equal to Len() (%d != %d)", e.Expected, e.Actual)
+}
+
 func (w *Writer) writeLiteral(l Literal) error {
 	if l == nil {
 		return w.writeString(nilAtom)
 	}
 
-	header := string(literalStart) + strconv.Itoa(l.Len()) + string(literalEnd) + crlf
+	unsyncLiteral := w.AllowAsyncLiterals && l.Len() <= 4096
+
+	header := string(literalStart) + strconv.Itoa(l.Len())
+	if unsyncLiteral {
+		header += string('+')
+	}
+	header += string(literalEnd) + crlf
 	if err := w.writeString(header); err != nil {
 		return err
 	}
 
 	// If a channel is available, wait for a continuation request before sending data
-	if w.continues != nil {
+	if !unsyncLiteral && w.continues != nil {
 		// Make sure to flush the writer, otherwise we may never receive a continuation request
 		if err := w.Flush(); err != nil {
 			return err
@@ -151,22 +160,34 @@ func (w *Writer) writeLiteral(l Literal) error {
 		}
 	}
 
-	_, err := io.Copy(w, l)
-	return err
+	// In case of bufio.Buffer, it will be 0 after io.Copy.
+	literalLen := int64(l.Len())
+
+	n, err := io.CopyN(w, l, literalLen)
+	if err != nil {
+		if err == io.EOF && n != literalLen {
+			return LiteralLengthErr{int(n), l.Len()}
+		}
+		return err
+	}
+	extra, _ := io.Copy(ioutil.Discard, l)
+	if extra != 0 {
+		return LiteralLengthErr{int(n + extra), l.Len()}
+	}
+
+	return nil
 }
 
 func (w *Writer) writeField(field interface{}) error {
 	if field == nil {
-		return w.writeAtom(nilAtom)
+		return w.writeString(nilAtom)
 	}
 
 	switch field := field.(type) {
+	case RawString:
+		return w.writeString(string(field))
 	case string:
-		return w.writeAstring(field)
-	case Quoted:
-		return w.writeQuoted(string(field))
-	case Atom:
-		return w.writeAtom(string(field))
+		return w.writeQuotedOrLiteral(field)
 	case int:
 		return w.writeNumber(uint32(field))
 	case uint32:
@@ -200,7 +221,7 @@ func (w *Writer) writeRespCode(code StatusRespCode, args []interface{}) error {
 		return err
 	}
 
-	fields := []interface{}{string(code)}
+	fields := []interface{}{RawString(code)}
 	fields = append(fields, args...)
 
 	if err := w.writeFields(fields); err != nil {

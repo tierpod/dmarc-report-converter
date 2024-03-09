@@ -17,7 +17,7 @@ type Store struct {
 func (cmd *Store) Command() *imap.Command {
 	return &imap.Command{
 		Name:      "STORE",
-		Arguments: []interface{}{cmd.SeqSet, string(cmd.Item), cmd.Value},
+		Arguments: []interface{}{cmd.SeqSet, imap.RawString(cmd.Item), cmd.Value},
 	}
 }
 
@@ -41,7 +41,10 @@ func (cmd *Store) Parse(fields []interface{}) error {
 		cmd.Item = imap.StoreItem(strings.ToUpper(item))
 	}
 
-	// TODO: could be fields[2:] according to RFC 3501 page 91 "store-att-flags"
-	cmd.Value = fields[2]
+	if len(fields[2:]) == 1 {
+		cmd.Value = fields[2]
+	} else {
+		cmd.Value = fields[2:]
+	}
 	return nil
 }

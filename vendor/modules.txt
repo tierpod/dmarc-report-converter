@@ -1,27 +1,22 @@
-# github.com/emersion/go-imap v1.0.0-beta.1.0.20180319181901-b63c7c7011cb
+# github.com/emersion/go-imap v1.2.1
 github.com/emersion/go-imap
 github.com/emersion/go-imap/client
 github.com/emersion/go-imap/commands
 github.com/emersion/go-imap/responses
 github.com/emersion/go-imap/utf7
-# github.com/emersion/go-message v0.9.2-0.20180321173051-51445bfdc558
+# github.com/emersion/go-message v0.18.0
 github.com/emersion/go-message
-github.com/emersion/go-message/charset
 github.com/emersion/go-message/mail
-# github.com/emersion/go-sasl v0.0.0-20161116183048-7e096a0a6197
+github.com/emersion/go-message/textproto
+# github.com/emersion/go-sasl v0.0.0-20231106173351-e73c9f7bad43
 github.com/emersion/go-sasl
-# github.com/emersion/go-textwrapper v0.0.0-20160606182133-d0e65e56babe
+# github.com/emersion/go-textwrapper v0.0.0-20200911093747-65d896831594
 github.com/emersion/go-textwrapper
-# github.com/hashicorp/logutils v0.0.0-20150609070431-0dc08b1671f3
+# github.com/hashicorp/logutils v1.0.0
 github.com/hashicorp/logutils
-# golang.org/x/text v0.3.8
+# golang.org/x/text v0.14.0
 golang.org/x/text/encoding
-golang.org/x/text/encoding/charmap
-golang.org/x/text/encoding/internal
 golang.org/x/text/encoding/internal/identifier
-golang.org/x/text/encoding/japanese
-golang.org/x/text/encoding/simplifiedchinese
-golang.org/x/text/encoding/traditionalchinese
 golang.org/x/text/transform
-# gopkg.in/yaml.v2 v2.2.1
+# gopkg.in/yaml.v2 v2.4.0
 gopkg.in/yaml.v2

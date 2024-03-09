@@ -35,15 +35,27 @@ func (c *Client) StartTLS(tlsConfig *tls.Config) error {
 		return ErrTLSAlreadyEnabled
 	}
 
+	if tlsConfig == nil {
+		tlsConfig = new(tls.Config)
+	}
+	if tlsConfig.ServerName == "" {
+		tlsConfig = tlsConfig.Clone()
+		tlsConfig.ServerName = c.serverName
+	}
+
 	cmd := new(commands.StartTLS)
 
 	err := c.Upgrade(func(conn net.Conn) (net.Conn, error) {
+		// Flag connection as in upgrading
+		c.upgrading = true
 		if status, err := c.execute(cmd, nil); err != nil {
 			return nil, err
 		} else if err := status.Err(); err != nil {
 			return nil, err
 		}
 
+		// Wait for reader to block.
+		c.conn.WaitReady()
 		tlsConn := tls.Client(conn, tlsConfig)
 		if err := tlsConn.Handshake(); err != nil {
 			return nil, err
@@ -86,10 +98,21 @@ func (c *Client) Authenticate(auth sasl.Client) error {
 		Mechanism: mech,
 	}
 
+	irOk, err := c.Support("SASL-IR")
+	if err != nil {
+		return err
+	}
+	if irOk {
+		cmd.InitialResponse = ir
+	}
+
 	res := &responses.Authenticate{
 		Mechanism:       auth,
 		InitialResponse: ir,
-		Writer:          c.Writer(),
+		RepliesCh:       make(chan []byte, 10),
+	}
+	if irOk {
+		res.InitialResponse = nil
 	}
 
 	status, err := c.execute(cmd, res)
@@ -115,7 +138,7 @@ func (c *Client) Authenticate(auth sasl.Client) error {
 // Login identifies the client to the server and carries the plaintext password
 // authenticating this user.
 func (c *Client) Login(username, password string) error {
-	if c.State() != imap.NotAuthenticatedState {
+	if state := c.State(); state == imap.AuthenticatedState || state == imap.SelectedState {
 		return ErrAlreadyLoggedIn
 	}
 
