@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/emersion/go-message/charset"
 	"github.com/hashicorp/logutils"
 )
 
