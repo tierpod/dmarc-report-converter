@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<feedback>
+  <report_metadata>
+    <org_name>Test Inc.</org_name>
+    <email>postmaster@test</email>
+    <report_id>1.id.0</report_id>
+    <extra_contact_info>http://test/help</extra_contact_info>
+    <date_range>
+      <begin>1524182400</begin>
+      <end>1524268799 </end>
+    </date_range>
+  </report_metadata>
+  <policy_published>
+    <domain>test.net</domain>
+    <adkim>r</adkim>
+    <aspf>r</aspf>
+    <p>none</p>
+    <pct>100</pct>
+  </policy_published>
+  <record>
+    <row>
+        <source_ip/>
+        <count>0</count>
+        <policy_evaluated>
+            <disposition/>
+            <dkim/>
+            <spf/>
+        </policy_evaluated>
+    </row>
+    <identifiers>
+        <header_from/>
+    </identifiers>
+    <auth_results>
+        <spf>
+            <domain/>
+            <result/>
+        </spf>
+    </auth_results>
+  </record>
+</feedback>

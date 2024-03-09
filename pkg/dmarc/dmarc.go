@@ -77,7 +77,11 @@ func (r *Report) CalculateStats() {
 		}
 	}
 	s.Failed = s.All - s.Passed
-	s.PassedPercent = math.Round((float64(s.Passed) / float64(s.All)) * 100)
+	if s.All == 0 {
+		s.PassedPercent = 0
+	} else {
+		s.PassedPercent = math.Round((float64(s.Passed) / float64(s.All)) * 100)
+	}
 
 	r.MessagesStats = *s
 }

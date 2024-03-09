@@ -200,3 +200,65 @@ func TestReadParse(t *testing.T) {
 		}
 	}
 }
+
+// Test empty data
+var xmlEmptyReport = Report{
+	XMLName: xml.Name{
+		Space: "",
+		Local: "feedback",
+	},
+	ReportMetadata:  xmlReportMetadata,
+	PolicyPublished: xmlPolicyPublished,
+	Records: []Record{
+		{
+			Row: Row{
+				SourceIP: "",
+				Count:    0,
+				PolicyEvaluated: PolicyEvaluated{
+					Disposition: "",
+					DKIM:        "",
+					SPF:         "",
+				},
+			},
+			Identifiers: Identifiers{
+				HeaderFrom:   "",
+				EnvelopeFrom: "",
+			},
+			AuthResults: AuthResults{
+				DKIM: DKIMAuthResult{
+					Domain:   "",
+					Result:   "",
+					Selector: "",
+				},
+				SPF: SPFAuthResult{
+					Domain: "",
+					Result: "",
+					Scope:  "",
+				},
+			},
+		},
+	},
+	MessagesStats: MessagesStats{
+		All:           0,
+		Failed:        0,
+		Passed:        0,
+		PassedPercent: 0,
+	},
+}
+
+func TestReadParse_Empty(t *testing.T) {
+	testFile := "testdata/test_empty.xml"
+	f, err := os.Open(testFile)
+	if err != nil {
+		t.Fatalf("ReadParse(%v): %v", testFile, err)
+	}
+	defer f.Close()
+	out, err := ReadParse(f, false)
+	if err != nil {
+		t.Fatalf("ReadParse(%v): %v", testFile, err)
+	}
+
+	if !reflect.DeepEqual(out, xmlEmptyReport) {
+		t.Errorf("ReadParse(%v): parsed structs are invalid: %+v", testFile, out)
+	}
+}
