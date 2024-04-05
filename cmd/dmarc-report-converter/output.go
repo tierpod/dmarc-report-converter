@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"log"
@@ -65,12 +66,28 @@ func (o *output) do(d dmarc.Report) error {
 }
 
 func (o *output) template(d dmarc.Report) error {
-	err := o.cfg.Output.template.Execute(o.w, d)
-	if err != nil {
-		return err
+	data := struct {
+		AssetsPath string
+		Report     dmarc.Report
+
+		// Deprecated
+		XMLName         xml.Name
+		ReportMetadata  dmarc.ReportMetadata
+		PolicyPublished dmarc.PolicyPublished
+		Records         []dmarc.Record
+		MessagesStats   dmarc.MessagesStats
+	}{
+		o.cfg.Output.AssetsPath,
+		d,
+
+		d.XMLName,
+		d.ReportMetadata,
+		d.PolicyPublished,
+		d.Records,
+		d.MessagesStats,
 	}
 
-	return nil
+	return o.cfg.Output.template.Execute(o.w, data)
 }
 
 func (o *output) templateHTML(d dmarc.Report) error {
@@ -79,12 +96,7 @@ func (o *output) templateHTML(d dmarc.Report) error {
 		Report     dmarc.Report
 	}{o.cfg.Output.AssetsPath, d}
 
-	err := o.cfg.Output.template.Execute(o.w, data)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return o.cfg.Output.template.Execute(o.w, data)
 }
 
 func (o *output) json(d dmarc.Report) error {
