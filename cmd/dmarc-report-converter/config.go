@@ -13,6 +13,7 @@ type config struct {
 	Input        Input  `yaml:"input"`
 	Output       Output `yaml:"output"`
 	LookupAddr   bool   `yaml:"lookup_addr"`
+	LookupLimit  int    `yaml:"lookup_limit"`
 	MergeReports bool   `yaml:"merge_reports"`
 	LogDebug     bool   `yaml:"log_debug"`
 	LogDatetime  bool   `yaml:"log_datetime"`
@@ -70,6 +71,10 @@ func loadConfig(path string) (*config, error) {
 	err = yaml.Unmarshal(data, &c)
 	if err != nil {
 		return nil, err
+	}
+
+	if c.LookupLimit < 1 {
+		c.LookupLimit = 50
 	}
 
 	if c.Input.Dir == "" {

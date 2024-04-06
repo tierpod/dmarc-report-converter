@@ -6,7 +6,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"math"
-	"net"
 	"sort"
 	"time"
 )
@@ -225,27 +224,7 @@ func Parse(b []byte, lookupAddr bool) (Report, error) {
 	}
 
 	r.SortRecords()
-
-	if lookupAddr {
-		doPTRlookup(&r)
-	}
-
 	r.CalculateStats()
 
 	return r, nil
-}
-
-func doPTRlookup(r *Report) error {
-	for i, record := range r.Records {
-		var hostname string
-		hostnames, err := net.LookupAddr(record.Row.SourceIP)
-		if err != nil {
-			hostname = ""
-		} else {
-			hostname = hostnames[0]
-		}
-		r.Records[i].Row.SourceHostname = hostname
-	}
-
-	return nil
 }
