@@ -112,8 +112,7 @@ Copy config/config.dist.yaml to config.yaml and change parameters:
 
   * **debug** (bool): print debug messages during IMAP session?
   
-  * **security** (str): select encryption among "tls" (default), "starttls" or "plaintext"
-
+  * **security** (str): select encryption between "tls" (default), "starttls" or "plaintext"
 
 **output** section:
 
