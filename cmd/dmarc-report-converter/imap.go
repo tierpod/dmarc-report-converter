@@ -20,6 +20,7 @@ func fetchIMAPAttachments(cfg *config) error {
 	var c *client.Client
         var err error
         if cfg.Input.IMAP.Security == "plaintext" {
+		log.Printf("[WARN] Without encryption your credentials may be stolen. Be careful!")
                 c, err = client.Dial(cfg.Input.IMAP.Server)
         } else if cfg.Input.IMAP.Security == "starttls" {
                 // go-imap v2 will replace all the following lines with
