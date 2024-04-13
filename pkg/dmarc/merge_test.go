@@ -46,15 +46,19 @@ func TestReport_MergeRecord(t *testing.T) {
 			EnvelopeFrom: "",
 		},
 		AuthResults: AuthResults{
-			DKIM: DKIMAuthResult{
-				Domain:   "test3.net",
-				Result:   "fail",
-				Selector: "selector",
+			DKIM: []DKIMAuthResult{
+				{
+					Domain:   "test3.net",
+					Result:   "fail",
+					Selector: "selector",
+				},
 			},
-			SPF: SPFAuthResult{
-				Domain: "test3.net",
-				Result: "softfail",
-				Scope:  "mfrom",
+			SPF: []SPFAuthResult{
+				{
+					Domain: "test3.net",
+					Result: "softfail",
+					Scope:  "mfrom",
+				},
 			},
 		},
 	}

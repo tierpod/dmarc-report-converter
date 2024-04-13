@@ -43,15 +43,24 @@ var xmlRecord1 = Record{
 		EnvelopeFrom: "",
 	},
 	AuthResults: AuthResults{
-		DKIM: DKIMAuthResult{
-			Domain:   "test.net",
-			Result:   "pass",
-			Selector: "selector",
+		DKIM: []DKIMAuthResult{
+			{
+				Domain:   "test1.net",
+				Result:   "fail",
+				Selector: "selector1",
+			},
+			{
+				Domain:   "test2.net",
+				Result:   "pass",
+				Selector: "selector2",
+			},
 		},
-		SPF: SPFAuthResult{
-			Domain: "test.net",
-			Result: "pass",
-			Scope:  "mfrom",
+		SPF: []SPFAuthResult{
+			{
+				Domain: "test.net",
+				Result: "pass",
+				Scope:  "mfrom",
+			},
 		},
 	},
 }
@@ -71,15 +80,19 @@ var xmlRecord2 = Record{
 		EnvelopeFrom: "",
 	},
 	AuthResults: AuthResults{
-		DKIM: DKIMAuthResult{
-			Domain:   "test2.net",
-			Result:   "fail",
-			Selector: "selector",
+		DKIM: []DKIMAuthResult{
+			{
+				Domain:   "test2.net",
+				Result:   "fail",
+				Selector: "selector",
+			},
 		},
-		SPF: SPFAuthResult{
-			Domain: "test2.net",
-			Result: "softfail",
-			Scope:  "mfrom",
+		SPF: []SPFAuthResult{
+			{
+				Domain: "test2.net",
+				Result: "softfail",
+				Scope:  "mfrom",
+			},
 		},
 	},
 }
@@ -225,15 +238,13 @@ var xmlEmptyReport = Report{
 				EnvelopeFrom: "",
 			},
 			AuthResults: AuthResults{
-				DKIM: DKIMAuthResult{
-					Domain:   "",
-					Result:   "",
-					Selector: "",
-				},
-				SPF: SPFAuthResult{
-					Domain: "",
-					Result: "",
-					Scope:  "",
+				DKIM: nil,
+				SPF: []SPFAuthResult{
+					{
+						Domain: "",
+						Result: "",
+						Scope:  "",
+					},
 				},
 			},
 		},
@@ -259,6 +270,6 @@ func TestReadParse_Empty(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(out, xmlEmptyReport) {
-		t.Errorf("ReadParse(%v): parsed structs are invalid: %+v", testFile, out)
+		t.Errorf("ReadParse(%v): parsed structs are invalid:\nGOT:\n%#v\nWANT:\n%#v", testFile, out, xmlEmptyReport)
 	}
 }
