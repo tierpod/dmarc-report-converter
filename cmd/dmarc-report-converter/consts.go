@@ -201,22 +201,38 @@ table.table.bottomless
 </body>
 </html>`
 
+// NOTE(moorereason): This template assumes only one SPF result will be present even though the DMARC spec allows for multiple.
 const txtTmpl = `
 DMARC report with id {{.ReportMetadata.ReportID}}
   Organization:     {{.ReportMetadata.ExtraContactInfo}} ({{.ReportMetadata.Email}}))
   Date range:       since {{.ReportMetadata.DateRange.Begin.UTC}} until {{.ReportMetadata.DateRange.End.UTC}}
   Policy published: {{.PolicyPublished.Domain}}: p={{.PolicyPublished.Policy}} sp={{.PolicyPublished.SPolicy}} pct={{.PolicyPublished.Pct}} adkim={{.PolicyPublished.ADKIM}} aspf={{.PolicyPublished.ASPF}}
-------------------------------------------------------------------------------------------------------------------------
-{{printf "%23v | %32v | %57v |" "" "policy evaluated" "auth results" }}
-------------------------------------------------------------------------------------------------------------------------
-{{printf "%16v | %4v | %10v | %8v | %8v | %16v | %8v | %16v | %8v | %v" "ip"          "msgs"     "disp"                           "dkim"                    "spf"                    "dkim domain"            "dkim res"               "spf domain"            "spf res"               "hostname"         }}
-------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------
+{{printf "%24v | %32v | %58v |" "" "policy evaluated" "auth results" }}
+--------------------------------------------------------------------------------------------------------------------------
+{{printf "%17v | %4v | %10v | %8v | %8v | %16v | %9v | %16v | %8v | %v" "ip"          "msgs"     "disp"                           "dkim"                    "spf"                    "dkim domain"            "dkim res"               "spf domain"            "spf res"               "hostname"         }}
+--------------------------------------------------------------------------------------------------------------------------
 {{- range .Records }}
-{{- if .IsPassed }}
-{{ printf "* %14v | %4v | %10v | %8v | %8v | %16v | %8v | %16v | %8v | %v" .Row.SourceIP .Row.Count .Row.PolicyEvaluated.Disposition .Row.PolicyEvaluated.DKIM .Row.PolicyEvaluated.SPF .AuthResults.DKIM.Domain .AuthResults.DKIM.Result .AuthResults.SPF.Domain .AuthResults.SPF.Result .Row.SourceHostname}}
-{{- else }}
-{{ printf "%16v | %4v | %10v | %8v | %8v | %16v | %8v | %16v | %8v | %v" .Row.SourceIP .Row.Count .Row.PolicyEvaluated.Disposition .Row.PolicyEvaluated.DKIM .Row.PolicyEvaluated.SPF .AuthResults.DKIM.Domain .AuthResults.DKIM.Result .AuthResults.SPF.Domain .AuthResults.SPF.Result .Row.SourceHostname}}
-{{- end}}
+	{{- $prefix := "  " }}{{ if .IsPassed }}{{ $prefix = "* " }}{{ end }}
+	{{- $dkimLen := len .AuthResults.DKIM }}
+	{{- if eq $dkimLen 0 }}
+{{ printf "%2v%15v | %4v | %10v | %8v | %8v | %16v | %9v | %16v | %8v | %v" $prefix .Row.SourceIP .Row.Count .Row.PolicyEvaluated.Disposition .Row.PolicyEvaluated.DKIM .Row.PolicyEvaluated.SPF "" "" (index .AuthResults.SPF 0).Domain (index .AuthResults.SPF 0).Result .Row.SourceHostname }}
+	{{- else if eq $dkimLen 1 }}
+		{{- $dkimDomain := (index .AuthResults.DKIM 0).Domain }}
+		{{- $dkimResult := (index .AuthResults.DKIM 0).Result }}
+{{ printf "%2v%15v | %4v | %10v | %8v | %8v | %16v | %9v | %16v | %8v | %v" $prefix .Row.SourceIP .Row.Count .Row.PolicyEvaluated.Disposition .Row.PolicyEvaluated.DKIM .Row.PolicyEvaluated.SPF $dkimDomain $dkimResult (index .AuthResults.SPF 0).Domain (index .AuthResults.SPF 0).Result .Row.SourceHostname }}
+	{{- else }}
+		{{- $rec := . }}
+		{{- range $i, $res := .AuthResults.DKIM }}
+			{{- $dkimDomain := $res.Domain }}
+			{{- $dkimResult := $res.Result }}
+			{{- if eq $i 0 }}
+{{ printf "%2v%15v | %4v | %10v | %8v | %8v | %16v | %9v | %16v | %8v | %v" $prefix $rec.Row.SourceIP $rec.Row.Count $rec.Row.PolicyEvaluated.Disposition $rec.Row.PolicyEvaluated.DKIM $rec.Row.PolicyEvaluated.SPF $dkimDomain $dkimResult (index $rec.AuthResults.SPF 0).Domain (index $rec.AuthResults.SPF 0).Result $rec.Row.SourceHostname }}
+			{{- else }}
+{{ printf "%2v%15v | %4v | %10v | %8v | %8v | %16v | %9v | %16v | %8v | %v" "" "" "" "" "" "" $dkimDomain $dkimResult "" "" "" }}
+			{{- end }}
+		{{- end }}
+	{{- end }}
 {{- end }}
 
 {{ printf "Total: %v, passed %v, failed %v" .MessagesStats.All .MessagesStats.Passed .MessagesStats.Failed }}
