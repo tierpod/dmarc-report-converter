@@ -2,12 +2,9 @@ package main
 
 import (
 	"log"
-	"net"
 	"os"
 	"path/filepath"
-	"time"
 
-	"github.com/sourcegraph/conc/pool"
 	"github.com/tierpod/dmarc-report-converter/pkg/dmarc"
 )
 
@@ -37,12 +34,6 @@ func (c *filesConverter) ConvertWrite() error {
 
 	c.convert()
 
-	if c.cfg.LookupAddr {
-		start := time.Now()
-		c.doDNSLookups()
-		log.Printf("[INFO] DNS lookups completed in %v", time.Since(start))
-	}
-
 	if c.cfg.MergeReports {
 		err = c.merge()
 		if err != nil {
@@ -60,31 +51,6 @@ func (c *filesConverter) ConvertWrite() error {
 	}
 
 	return nil
-}
-
-// doDNSLookups uses a limited goroutine pool to do concurrent DNS lookups.
-func (c *filesConverter) doDNSLookups() {
-	p := pool.New().WithMaxGoroutines(c.cfg.LookupLimit)
-
-	for _, r := range c.reports {
-		r := r
-		start := time.Now()
-
-		for i, record := range r.Records {
-			i := i
-			record := record
-
-			p.Go(func() {
-				hostnames, err := net.LookupAddr(record.Row.SourceIP)
-				if err == nil {
-					r.Records[i].Row.SourceHostname = hostnames[0]
-				}
-			})
-		}
-		log.Printf("[DEBUG] files: %d DNS lookups for %s in %v", len(r.Records), r.ReportMetadata.OrgName, time.Since(start))
-	}
-
-	p.Wait()
 }
 
 func (c *filesConverter) find() error {
@@ -140,7 +106,7 @@ func (c *filesConverter) convert() {
 			continue
 		}
 
-		report, err := readParse(file, f, c.cfg.LookupAddr)
+		report, err := readParse(file, f, c.cfg.LookupAddr, c.cfg.LookupLimit)
 		if err != nil {
 			file.Close()
 			log.Printf("[ERROR] files: %v in file %v, skip", err, f)

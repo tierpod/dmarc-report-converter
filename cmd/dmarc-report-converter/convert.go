@@ -7,15 +7,11 @@ import (
 	"github.com/tierpod/dmarc-report-converter/pkg/dmarc"
 )
 
-func readParse(r io.Reader, fname string, lookupAddr bool) (dmarc.Report, error) {
-	var report dmarc.Report
-	var err error
-
+// readParse is a helper function that passes r, lookupAddr, and lookupLimit to
+// dmarc.ReadParse.
+//
+// fname is the file name associated with r and is only used for debug logging.
+func readParse(r io.Reader, fname string, lookupAddr bool, lookupLimit int) (dmarc.Report, error) {
 	log.Printf("[DEBUG] parse: %v", fname)
-
-	report, err = dmarc.ReadParse(r, lookupAddr)
-	if err != nil {
-		return dmarc.Report{}, err
-	}
-	return report, nil
+	return dmarc.ReadParse(r, lookupAddr, lookupLimit)
 }

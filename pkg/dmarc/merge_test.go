@@ -10,7 +10,7 @@ func TestReport_MergeRecord(t *testing.T) {
 	// we have tested this errors already
 	f, _ := os.Open("testdata/test.xml")
 	defer f.Close()
-	report, _ := ReadParseXML(f, false)
+	report, _ := ReadParseXML(f, false, 1)
 
 	// this record must be merged with the xmlRecord2
 	r1 := xmlRecord2
@@ -79,7 +79,7 @@ func TestReport_MergeReport(t *testing.T) {
 	}
 	defer f.Close()
 
-	rep1, err := ReadParseXML(f, false)
+	rep1, err := ReadParseXML(f, false, 1)
 	if err != nil {
 		t.Fatalf("Report_MergeReport: %v", err)
 	}
@@ -91,7 +91,7 @@ func TestReport_MergeReport(t *testing.T) {
 	}
 	defer f.Close()
 
-	rep2, err := ReadParseXML(f, false)
+	rep2, err := ReadParseXML(f, false, 1)
 	if err != nil {
 		t.Fatalf("Report_MergeReport: %v", err)
 	}
