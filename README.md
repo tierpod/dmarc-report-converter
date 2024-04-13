@@ -111,6 +111,8 @@ Copy config/config.dist.yaml to config.yaml and change parameters:
   * **delete** (bool): delete email messages from IMAP server if reports are fetched successfully
 
   * **debug** (bool): print debug messages during IMAP session?
+  
+  * **security** (str): select encryption between "tls" (default), "starttls" or "plaintext"
 
 **output** section:
 

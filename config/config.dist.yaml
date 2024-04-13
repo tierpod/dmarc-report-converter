@@ -10,6 +10,8 @@ input:
   #  debug: no
   # delete emails from server after fetch?
   #  delete: no
+  # connection security should be: tls (default), starttls, plaintext
+  #  security: "tls"
 
 output:
   # output file

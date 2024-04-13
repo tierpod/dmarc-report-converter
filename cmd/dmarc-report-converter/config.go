@@ -33,6 +33,7 @@ type IMAP struct {
 	Mailbox  string `yaml:"mailbox"`
 	Debug    bool   `yaml:"debug"`
 	Delete   bool   `yaml:"delete"`
+	Security string `yaml:"security"`
 }
 
 // IsConfigured return true if IMAP is configured
