@@ -18,31 +18,31 @@ func fetchIMAPAttachments(cfg *config) error {
 
 	// connect to server
 	var c *client.Client
-        var err error
-        if cfg.Input.IMAP.Security == "plaintext" {
+	var err error
+	if cfg.Input.IMAP.Security == "plaintext" {
 		log.Printf("[WARN] Without encryption your credentials may be stolen. Be careful!")
-                c, err = client.Dial(cfg.Input.IMAP.Server)
-        } else if cfg.Input.IMAP.Security == "starttls" {
-                // go-imap v2 will replace all the following lines with
-                // c, err = client.DialStartTLS(cfg.Input.IMAP.Server, nil)
+		c, err = client.Dial(cfg.Input.IMAP.Server)
+	} else if cfg.Input.IMAP.Security == "starttls" {
+		// go-imap v2 will replace all the following lines with
+		// c, err = client.DialStartTLS(cfg.Input.IMAP.Server, nil)
 		// and there will be no need to import "errors"
-                c, err = client.Dial(cfg.Input.IMAP.Server)
-                if err == nil {
-                        sstRet, sstErr := c.SupportStartTLS();
-                        if sstErr != nil {
-                                err = sstErr
-                        } else if !sstRet {
-                                err = errors.New("server doesn't support starttls")
-                        } else {
-                                err = c.StartTLS(nil);
-                        }
-                }
-                if err != nil {
-                        c.Logout()
-                }
-        } else {
-                c, err = client.DialTLS(cfg.Input.IMAP.Server, nil)
-        }
+		c, err = client.Dial(cfg.Input.IMAP.Server)
+		if err == nil {
+			sstRet, sstErr := c.SupportStartTLS()
+			if sstErr != nil {
+				err = sstErr
+			} else if !sstRet {
+				err = errors.New("server doesn't support starttls")
+			} else {
+				err = c.StartTLS(nil)
+			}
+		}
+		if err != nil {
+			c.Logout()
+		}
+	} else {
+		c, err = client.DialTLS(cfg.Input.IMAP.Server, nil)
+	}
 	if err != nil {
 		return err
 	}

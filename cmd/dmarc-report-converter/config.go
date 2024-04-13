@@ -77,6 +77,14 @@ func loadConfig(path string) (*config, error) {
 		return nil, fmt.Errorf("input.dir is not configured")
 	}
 
+	if c.Input.IMAP.Security == "" {
+		c.Input.IMAP.Security = "tls"
+	}
+
+	if c.Input.IMAP.Security != "tls" && c.Input.IMAP.Security != "starttls" && c.Input.IMAP.Security != "plaintext" {
+		return nil, fmt.Errorf("'input.imap.security' must be one of: tls, starttls, plaintext")
+	}
+
 	// Determine which template is used based upon Output.Format.
 	t := txtTmpl
 	switch c.Output.Format {
