@@ -32,9 +32,14 @@
     </identifiers>
     <auth_results>
       <dkim>
-        <domain>test.net</domain>
+        <domain>test1.net</domain>
+        <result>fail</result>
+        <selector>selector1</selector>
+      </dkim>
+      <dkim>
+        <domain>test2.net</domain>
         <result>pass</result>
-        <selector>selector</selector>
+        <selector>selector2</selector>
       </dkim>
       <spf>
         <domain>test.net</domain>

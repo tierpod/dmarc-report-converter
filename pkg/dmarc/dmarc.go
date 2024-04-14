@@ -200,8 +200,8 @@ type Identifiers struct {
 
 // AuthResults represents feedback>record>auth_results section
 type AuthResults struct {
-	DKIM DKIMAuthResult `xml:"dkim" json:"dkim"`
-	SPF  SPFAuthResult  `xml:"spf" json:"spf"`
+	DKIM []DKIMAuthResult `xml:"dkim" json:"dkim"`
+	SPF  []SPFAuthResult  `xml:"spf" json:"spf"`
 }
 
 // DKIMAuthResult represnets feedback>record>auth_results>dkim sections
