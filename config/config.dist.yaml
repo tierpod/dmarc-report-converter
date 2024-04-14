@@ -35,5 +35,8 @@ lookup_addr: no
 # merge multiple similar reports to one?
 merge_reports: yes
 
+# Go template string used to generate a key to merge reports.
+#merge_reports: "{{ .ReportMetadata.OrgName }}!{{ .ReportMetadata.Email }}!{{ .PolicyPublished.Domain }}"
+
 log_debug: no
 log_datetime: no

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"log"
 
 	"github.com/tierpod/dmarc-report-converter/pkg/dmarc"
@@ -19,11 +21,18 @@ func mergeReports(reports []dmarc.Report) dmarc.Report {
 	return first
 }
 
-func groupReportsKey(r dmarc.Report) string {
-	return fmt.Sprintf("%v!%v!%v", r.ReportMetadata.OrgName, r.ReportMetadata.Email, r.PolicyPublished.Domain)
+func groupReportsKey(r dmarc.Report, t *template.Template) (string, error) {
+	var buf bytes.Buffer
+
+	err := t.Execute(&buf, r)
+	if err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }
 
-func groupMergeReports(reports []dmarc.Report) ([]dmarc.Report, error) {
+func groupMergeReports(reports []dmarc.Report, t *template.Template) ([]dmarc.Report, error) {
 	if len(reports) == 0 {
 		return nil, fmt.Errorf("reports list is empty")
 	}
@@ -36,7 +45,11 @@ func groupMergeReports(reports []dmarc.Report) ([]dmarc.Report, error) {
 
 	// group reports by key
 	for _, r := range reports {
-		key := groupReportsKey(r)
+		key, err := groupReportsKey(r, t)
+		if err != nil {
+			return reports, fmt.Errorf("error generating merge key: %s", err)
+		}
+
 		//lint:ignore S1036 we dont want to add nil value
 		if _, found := grouped[key]; found {
 			grouped[key] = append(grouped[key], r)

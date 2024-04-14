@@ -14,6 +14,7 @@ type config struct {
 	Output       Output `yaml:"output"`
 	LookupAddr   bool   `yaml:"lookup_addr"`
 	MergeReports bool   `yaml:"merge_reports"`
+	MergeKey     string `yaml:"merge_key"`
 	LogDebug     bool   `yaml:"log_debug"`
 	LogDatetime  bool   `yaml:"log_datetime"`
 }
@@ -50,6 +51,7 @@ type Output struct {
 	template         *template.Template
 	AssetsPath       string `yaml:"assets_path"`
 	ExternalTemplate string `yaml:"external_template"`
+	mergeKeyTemplate *template.Template
 }
 
 func (o *Output) isStdout() bool {
@@ -83,6 +85,10 @@ func loadConfig(path string) (*config, error) {
 
 	if c.Input.IMAP.Security != "tls" && c.Input.IMAP.Security != "starttls" && c.Input.IMAP.Security != "plaintext" {
 		return nil, fmt.Errorf("'input.imap.security' must be one of: tls, starttls, plaintext")
+	}
+
+	if c.MergeKey == "" {
+		c.MergeKey = `{{ .ReportMetadata.OrgName }}!{{ .ReportMetadata.Email }}!{{ .PolicyPublished.Domain }}`
 	}
 
 	// Determine which template is used based upon Output.Format.
@@ -119,6 +125,8 @@ func loadConfig(path string) (*config, error) {
 		ft := template.Must(template.New("filename").Funcs(tmplFuncs).Parse(c.Output.File))
 		c.Output.fileTemplate = ft
 	}
+
+	c.Output.mergeKeyTemplate = template.Must(template.New("merge_key").Funcs(tmplFuncs).Parse(c.MergeKey))
 
 	return &c, nil
 }
