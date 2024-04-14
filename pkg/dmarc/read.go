@@ -21,20 +21,32 @@ const (
 	MimeTypeXML = "text/xml"
 )
 
-// ReadParseXML reads xml data from r and parses it to Report struct. If lookupAddr is
-// true, performs a reverse lookups for feedback>record>row>source_ip
-func ReadParseXML(r io.Reader, lookupAddr bool) (Report, error) {
+// ReadParseXML reads xml data from r and parses it to Report struct.
+//
+// If lookupAddr is true, performs reverse DNS lookups for all
+// feedback>record>row>source_ip entries.
+//
+// lookupLimit is the maximum pool size for doing concurrent DNS lookups. Any
+// lookupLimit value less than 1 will disable concurrency by setting the pool
+// size to 1.
+func ReadParseXML(r io.Reader, lookupAddr bool, lookupLimit int) (Report, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return Report{}, err
 	}
 
-	return Parse(data, lookupAddr)
+	return Parse(data, lookupAddr, lookupLimit)
 }
 
-// ReadParseGZIP reads gzipped xml data from r and parses it to Report struct. If lookupAddr is
-// true, performs a reverse lookups for feedback>record>row>source_ip
-func ReadParseGZIP(r io.Reader, lookupAddr bool) (Report, error) {
+// ReadParseGZIP reads gzipped xml data from r and parses it to Report struct.
+//
+// If lookupAddr is true, performs reverse DNS lookups for all
+// feedback>record>row>source_ip entries.
+//
+// lookupLimit is the maximum pool size for doing concurrent DNS lookups. Any
+// lookupLimit value less than 1 will disable concurrency by setting the pool
+// size to 1.
+func ReadParseGZIP(r io.Reader, lookupAddr bool, lookupLimit int) (Report, error) {
 	gr, err := gzip.NewReader(r)
 	if err != nil {
 		return Report{}, err
@@ -53,17 +65,23 @@ func ReadParseGZIP(r io.Reader, lookupAddr bool) (Report, error) {
 	mtype := http.DetectContentType(data)
 	if mtype == MimeTypeGZIP {
 		log.Printf("[DEBUG] ReadParseGZIP: detected nested %v mimetype", mtype)
-		return ReadParseGZIP(buf, lookupAddr)
+		return ReadParseGZIP(buf, lookupAddr, lookupLimit)
 	} else if strings.HasPrefix(mtype, MimeTypeXML) {
-		return ReadParseXML(buf, lookupAddr)
+		return ReadParseXML(buf, lookupAddr, lookupLimit)
 	}
 
 	return Report{}, fmt.Errorf("ReadParseGZIP: supported mimetypes not found")
 }
 
-// ReadParseZIP reads zipped xml data from r and parses it to Report struct. If lookupAddr is
-// true, performs a reverse lookups for feedback>record>row>source_ip
-func ReadParseZIP(r io.Reader, lookupAddr bool) (Report, error) {
+// ReadParseZIP reads zipped xml data from r and parses it to Report struct.
+//
+// If lookupAddr is true, performs reverse DNS lookups for all
+// feedback>record>row>source_ip entries.
+//
+// lookupLimit is the maximum pool size for doing concurrent DNS lookups. Any
+// lookupLimit value less than 1 will disable concurrency by setting the pool
+// size to 1.
+func ReadParseZIP(r io.Reader, lookupAddr bool, lookupLimit int) (Report, error) {
 	zipBytes, err := io.ReadAll(r)
 	if err != nil {
 		return Report{}, err
@@ -92,7 +110,7 @@ func ReadParseZIP(r io.Reader, lookupAddr bool) (Report, error) {
 		}
 		defer rr.Close()
 
-		return ReadParseXML(rr, lookupAddr)
+		return ReadParseXML(rr, lookupAddr, lookupLimit)
 	}
 
 	return Report{}, err
@@ -100,8 +118,14 @@ func ReadParseZIP(r io.Reader, lookupAddr bool) (Report, error) {
 
 // ReadParse reads any data from reader r, detects mimetype, and parses it to
 // Report struct (if mimetype is supported).
-// If lookupAddr is true, performs reverse lookups for feedback>record>row>source_ip
-func ReadParse(r io.Reader, lookupAddr bool) (Report, error) {
+//
+// If lookupAddr is true, performs reverse DNS lookups for all
+// feedback>record>row>source_ip entries.
+//
+// lookupLimit is the maximum pool size for doing concurrent DNS lookups. Any
+// lookupLimit value less than 1 will disable concurrency by setting the pool
+// size to 1.
+func ReadParse(r io.Reader, lookupAddr bool, lookupLimit int) (Report, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return Report{}, err
@@ -112,11 +136,11 @@ func ReadParse(r io.Reader, lookupAddr bool) (Report, error) {
 
 	br := bytes.NewReader(data)
 	if mtype == MimeTypeGZIP {
-		return ReadParseGZIP(br, lookupAddr)
+		return ReadParseGZIP(br, lookupAddr, lookupLimit)
 	} else if mtype == MimeTypeZIP {
-		return ReadParseZIP(br, lookupAddr)
+		return ReadParseZIP(br, lookupAddr, lookupLimit)
 	} else if strings.HasPrefix(mtype, MimeTypeXML) {
-		return ReadParseXML(br, lookupAddr)
+		return ReadParseXML(br, lookupAddr, lookupLimit)
 	}
 
 	return Report{}, fmt.Errorf("mimetype %v not supported", mtype)

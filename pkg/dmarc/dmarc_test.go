@@ -137,7 +137,7 @@ func TestReadParseXML(t *testing.T) {
 	}
 	defer f.Close()
 
-	out, err := ReadParseXML(f, false)
+	out, err := ReadParseXML(f, false, 1)
 	if err != nil {
 		t.Fatalf("ReadParseXML: %v", err)
 	}
@@ -154,7 +154,7 @@ func TestReadParseGZIP(t *testing.T) {
 	}
 	defer f.Close()
 
-	out, err := ReadParseGZIP(f, false)
+	out, err := ReadParseGZIP(f, false, 1)
 	if err != nil {
 		t.Fatalf("ReadParseGZIP: %v", err)
 	}
@@ -171,7 +171,7 @@ func TestReadParseZIP(t *testing.T) {
 	}
 	defer f.Close()
 
-	out, err := ReadParseZIP(f, false)
+	out, err := ReadParseZIP(f, false, 1)
 	if err != nil {
 		t.Fatalf("ReadParseZIP: %v", err)
 	}
@@ -190,7 +190,7 @@ func TestReadParse(t *testing.T) {
 		}
 		defer f.Close()
 
-		out, err := ReadParse(f, false)
+		out, err := ReadParse(f, false, 1)
 		if err != nil {
 			t.Fatalf("ReadParse(%v): %v", testFile, err)
 		}
@@ -253,7 +253,7 @@ func TestReadParse_Empty(t *testing.T) {
 		t.Fatalf("ReadParse(%v): %v", testFile, err)
 	}
 	defer f.Close()
-	out, err := ReadParse(f, false)
+	out, err := ReadParse(f, false, 1)
 	if err != nil {
 		t.Fatalf("ReadParse(%v): %v", testFile, err)
 	}

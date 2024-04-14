@@ -106,7 +106,7 @@ func (c *filesConverter) convert() {
 			continue
 		}
 
-		report, err := readParse(file, f, c.cfg.LookupAddr)
+		report, err := readParse(file, f, c.cfg.LookupAddr, c.cfg.LookupLimit)
 		if err != nil {
 			file.Close()
 			log.Printf("[ERROR] files: %v in file %v, skip", err, f)

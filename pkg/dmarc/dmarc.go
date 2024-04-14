@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"log"
 	"math"
 	"net"
 	"sort"
 	"time"
+
+	"github.com/sourcegraph/conc/pool"
 )
 
 // ReportIDDateTime is the DateTime format for Report.ID
@@ -215,37 +218,57 @@ type SPFAuthResult struct {
 	Scope  string `xml:"scope" json:"scope"`
 }
 
-// Parse parses input xml data b to Report struct. If lookupAddr is true, performs a reverse
-// lookups for feedback>record>row>source_ip
-func Parse(b []byte, lookupAddr bool) (Report, error) {
+// Parse parses input xml data b to Report struct.
+//
+// If lookupAddr is true, performs reverse DNS lookups for all
+// feedback>record>row>source_ip entries.
+//
+// lookupLimit is the maximum pool size for doing concurrent DNS lookups. Any
+// lookupLimit value less than 1 will disable concurrency by setting the pool
+// size to 1.
+func Parse(b []byte, lookupAddr bool, lookupLimit int) (Report, error) {
 	var r Report
 	err := xml.Unmarshal(b, &r)
 	if err != nil {
 		return Report{}, err
 	}
 
-	r.SortRecords()
-
 	if lookupAddr {
-		doPTRlookup(&r)
+		doPTRLookups(&r, lookupLimit)
 	}
 
+	r.SortRecords()
 	r.CalculateStats()
 
 	return r, nil
 }
 
-func doPTRlookup(r *Report) error {
-	for i, record := range r.Records {
-		var hostname string
-		hostnames, err := net.LookupAddr(record.Row.SourceIP)
-		if err != nil {
-			hostname = ""
-		} else {
-			hostname = hostnames[0]
-		}
-		r.Records[i].Row.SourceHostname = hostname
+// doPTRLookups uses a limited goroutine pool to do concurrent DNS lookups for
+// all record>row>source_ip entries in r.
+//
+// lookupLimit is the goroutine pool size. Any lookupLimit value less than 1
+// will essentially disable concurrency by setting the pool size to 1.
+func doPTRLookups(r *Report, lookupLimit int) {
+	if lookupLimit < 1 {
+		lookupLimit = 1
 	}
 
-	return nil
+	p := pool.New().WithMaxGoroutines(lookupLimit)
+
+	start := time.Now()
+
+	for i, record := range r.Records {
+		i := i
+		record := record
+
+		p.Go(func() {
+			hostnames, err := net.LookupAddr(record.Row.SourceIP)
+			if err == nil {
+				r.Records[i].Row.SourceHostname = hostnames[0]
+			}
+		})
+	}
+	log.Printf("[INFO] Parse: completed %d DNS lookups in %v for report %s", len(r.Records), time.Since(start), r.ReportMetadata.ReportID)
+
+	p.Wait()
 }
