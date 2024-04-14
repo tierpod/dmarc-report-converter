@@ -61,7 +61,7 @@ func TestExternalTemplate(t *testing.T) {
 </feedback>
 `
 
-	report, err := dmarc.Parse([]byte(r), false)
+	report, err := dmarc.Parse([]byte(r), false, 1)
 	if err != nil {
 		t.Errorf("unexpected error parsing XML: %s", err)
 	}
@@ -113,7 +113,7 @@ XMLName: feedback
 ReportMetadata: {Org 1 foo@bar.baz  1712279633.907274 {2024-04-03 19:00:00 -0500 CDT 2024-04-04 18:59:59 -0500 CDT}}
 PolicyPublished: {report.test r r none  100}
 ## Records
-- {{1.2.3.4 1 {none pass fail} } {headerfrom.test } {{cust.test pass 2020263919} {spf.test pass }}}
+- {{1.2.3.4 1 {none pass fail} } {headerfrom.test } {[{auth.test pass 1000073432} {cust.test pass 2020263919}] [{spf.test pass }]}}
 ## MessagesStats
 {1 0 1 100}
 
