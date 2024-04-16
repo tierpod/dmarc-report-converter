@@ -61,70 +61,98 @@ func TestExternalTemplate(t *testing.T) {
 </feedback>
 `
 
-	report, err := dmarc.Parse([]byte(r), false, 1)
-	if err != nil {
-		t.Errorf("unexpected error parsing XML: %s", err)
-	}
+	tests := map[string]struct {
+		tmpl   string
+		expect string
+	}{
+		".AssetsPath": {
+			`{{ .AssetsPath }}`,
+			`/foo`,
+		},
+		".Report.XMLName.Local": {
+			`{{ .Report.XMLName.Local }}`,
+			`feedback`,
+		},
+		".Report.ReportMetadata": {
+			`{{ .Report.ReportMetadata }}`,
+			`{Org 1 foo@bar.baz  1712279633.907274 {2024-04-04 00:00:00 &#43;0000 UTC 2024-04-04 23:59:59 &#43;0000 UTC}}`,
+		},
+		".Report.PolicyPublished": {
+			`{{ .Report.PolicyPublished }}`,
+			`{report.test r r none  100}`,
+		},
+		".Report.Records": {
+			"{{ range .Report.Records }}\n- {{ . }}\n{{ end -}}",
+			"\n- {{1.2.3.4 1 {none pass fail} } {headerfrom.test } {[{auth.test pass 1000073432} {cust.test pass 2020263919}] [{spf.test pass }]}}\n",
+		},
+		".Report.MessagesStats": {
+			`{{ .Report.MessagesStats }}`,
+			`{1 0 1 100}`,
+		},
 
-	tmpl := `AssetsPath: {{ .AssetsPath }}
-# Report
-XMLName: {{ .Report.XMLName.Local }}
-ReportMetadata: {{ .Report.ReportMetadata }}
-PolicyPublished: {{ .Report.PolicyPublished }}
-## Records
-{{- range .Report.Records }}
-- {{ . }}
-{{ end -}}
-## MessagesStats
-{{ .Report.MessagesStats }}
-
-// Deprecated
-XMLName: {{ .XMLName.Local }}
-ReportMetadata: {{ .ReportMetadata }}
-PolicyPublished: {{ .PolicyPublished }}
-{{ .MessagesStats }}
-`
-
-	conf := config{
-		Output: Output{
-			AssetsPath: "/foo",
-			template: template.Must(template.New("report").Funcs(
-				template.FuncMap{
-					"now": func(fmt string) string {
-						return time.Now().Format(fmt)
-					},
-				},
-			).Parse(tmpl)),
+		// Deprecated
+		".XMLName.Local": {
+			`{{ .XMLName.Local }}`,
+			`feedback`,
+		},
+		".ReportMetadata": {
+			`{{ .ReportMetadata }}`,
+			`{Org 1 foo@bar.baz  1712279633.907274 {2024-04-04 00:00:00 &#43;0000 UTC 2024-04-04 23:59:59 &#43;0000 UTC}}`,
+		},
+		".PolicyPublished": {
+			`{{ .PolicyPublished }}`,
+			`{report.test r r none  100}`,
+		},
+		".MessagesStats": {
+			`{{ .MessagesStats }}`,
+			`{1 0 1 100}`,
 		},
 	}
 
-	var buf bytes.Buffer
-	out := newOutput(&conf)
-	out.w = &buf
+	// Set the timezone so that timestamps match regardless of local system time
+	origLocal := time.Local
 
-	err = out.template(report)
+	loc, err := time.LoadLocation("UTC")
 	if err != nil {
-		t.Errorf("unexpected error building template: %s", err)
+		t.Errorf("unable to load UTC timezone: %s", err)
+	}
+	time.Local = loc
+	defer func() {
+		// Reset timezone
+		time.Local = origLocal
+	}()
+
+	report, err := dmarc.Parse([]byte(r), false, 1)
+	if err != nil {
+		t.Fatalf("unexpected error parsing XML: %s", err)
 	}
 
-	expect := `AssetsPath: /foo
-# Report
-XMLName: feedback
-ReportMetadata: {Org 1 foo@bar.baz  1712279633.907274 {2024-04-03 19:00:00 -0500 CDT 2024-04-04 18:59:59 -0500 CDT}}
-PolicyPublished: {report.test r r none  100}
-## Records
-- {{1.2.3.4 1 {none pass fail} } {headerfrom.test } {[{auth.test pass 1000073432} {cust.test pass 2020263919}] [{spf.test pass }]}}
-## MessagesStats
-{1 0 1 100}
+	for name, test := range tests {
+		conf := config{
+			Output: Output{
+				AssetsPath: "/foo",
+				template: template.Must(template.New("report").Funcs(
+					template.FuncMap{
+						"now": func(fmt string) string {
+							return time.Now().Format(fmt)
+						},
+					},
+				).Parse(test.tmpl)),
+			},
+		}
 
-// Deprecated
-XMLName: feedback
-ReportMetadata: {Org 1 foo@bar.baz  1712279633.907274 {2024-04-03 19:00:00 -0500 CDT 2024-04-04 18:59:59 -0500 CDT}}
-PolicyPublished: {report.test r r none  100}
-{1 0 1 100}
-`
+		var buf bytes.Buffer
+		out := newOutput(&conf)
+		out.w = &buf
 
-	if buf.String() != expect {
-		t.Errorf("Oops!\nWANT:\n%s\nGOT:\n%s", expect, buf.String())
+		err = out.template(report)
+		if err != nil {
+			t.Fatalf("%s: unexpected error building template: %s", name, err)
+		}
+
+		if buf.String() != test.expect {
+			t.Errorf("%s\nWANT:\n%s\nGOT:\n%s", name, test.expect, buf.String())
+		}
+
 	}
 }
