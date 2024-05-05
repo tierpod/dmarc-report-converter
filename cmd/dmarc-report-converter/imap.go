@@ -166,11 +166,13 @@ func extractAttachment(r io.Reader, inputDir string) (bool, error) {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			log.Printf("[ERROR] imap: can't read next part: %v, skip", err)
+			log.Printf("[ERROR] extractAttachment: can't read next part: %v, skip", err)
 			break
 		}
 
 		switch h := p.Header.(type) {
+		case *mail.InlineHeader:
+			log.Printf("[WARN] extractAttachment: inline MIME headers are not currently supported, skip")
 		case *mail.AttachmentHeader:
 			// this is an attachment
 			filename, err := h.Filename()
