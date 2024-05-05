@@ -141,7 +141,7 @@ func (c *filesConverter) convert() {
 }
 
 func (c *filesConverter) merge() error {
-	reports, err := groupMergeReports(c.reports)
+	reports, err := groupMergeReports(c.reports, c.cfg.Output.mergeKeyTemplate)
 	if err != nil {
 		return err
 	}

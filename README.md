@@ -94,6 +94,10 @@ Copy config/config.dist.yaml to config.yaml and change parameters:
 
 * **merge_reports** (bool): merge multiple similar reports to one?
 
+* **merge_key** (string): Go template string used to generate a key to merge
+  reports.  Only used when `merge_reports` is enabled.
+  Default is `{{ .ReportMetadata.OrgName }}!{{ .ReportMetadata.Email }}!{{ .PolicyPublished.Domain }}`.
+
 * **log_debug** (bool): print debug log messages?
 
 * **log_datetime** (bool): add datetime to log messages?
