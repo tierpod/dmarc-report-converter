@@ -83,6 +83,12 @@ Installation
 
     and go to the http://your-web-server/dmarc
 
+### docker compose
+
+There is a Docker Compose wrapper created by @nielsbom (thanks!):
+
+https://github.com/nielsbom/dmarc_report_viewer
+
 Configuration
 -------------
 
@@ -220,3 +226,6 @@ Thanks
 * [jquery](http://jquery.com/)
 * [ChartJS](http://chartjs.org/)
 * [golang emersion packages](https://github.com/emersion) (go-imap, go-message, go-sasl, go-textwrapper)
+
+And we have a lot of [contributors](https://github.com/tierpod/dmarc-report-converter/graphs/contributors)!
+

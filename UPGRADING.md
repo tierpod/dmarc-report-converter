@@ -1,6 +1,21 @@
 UPGRADING instructions
 ======================
 
+Migration to 0.8
+----------------
+
+There are some breaking changes in 0.8:
+
+* *external_template* now uses the same template context as other kind of templates. It makes all
+  templates consistent. If you use external_template, just replace `.` with `.Report`. See const.go
+  for example, more details in PR [#47](https://github.com/tierpod/dmarc-report-converter/pull/47),
+  thanks to @moorereason)
+
+* json output format changed, because `feedback>record>auth_results` dkim and
+  spf can have multiple results (list of results). More details in PR
+  [#51](https://github.com/tierpod/dmarc-report-converter/pull/51), thanks to
+  @moorereason)
+
 Migration to 0.6
 ----------------
 
