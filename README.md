@@ -85,7 +85,7 @@ Installation
 
 ### docker compose
 
-There is a Docker Compose wrapper created by @nielsbom (thank!):
+There is a Docker Compose wrapper created by @nielsbom (thanks!):
 
 https://github.com/nielsbom/dmarc_report_viewer
 
