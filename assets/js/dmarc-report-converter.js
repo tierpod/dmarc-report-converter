@@ -45,17 +45,20 @@ $(document).ready(function(){
             }]
         },
         options: {
-            title: {
-                display: true,
-                text: 'messages count per hostnames',
+            aspectRatio: 2,
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                title: {
+                    display: true,
+                    text: 'messages count per hostnames',
+                },
             },
             scales: {
-                yAxes: [{
+                y: {
                     display: false,
-                }]
-            },
-            legend: {
-                display: false,
+                }
             },
         }
     });
@@ -76,18 +79,20 @@ $(document).ready(function(){
             }],
         },
         options: {
-            title: {
-                display: true,
-                text: 'pass/fail messages',
+            aspectRatio: 2,
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                title: {
+                    display: true,
+                    text: 'pass/fail messages',
+                },
             },
             scales: {
-                yAxes: [{
+                y: {
                     display: false,
-                }]
-            },
-            legend: {
-                display: false,
-                // position: 'right'
+                }
             },
         },
     });
