@@ -1,6 +1,7 @@
 NAME       := dmarc-report-converter
 DESTDIR    := /opt
 INSTALLDIR := $(DESTDIR)/dmarc-report-converter
+ARCH       := $(shell arch)
 
 ifeq ($(GITHUB_REF),)
 GIT_VER    := $(shell git describe --abbrev=7 --always --tags)-$(shell git rev-parse --abbrev-ref HEAD)-$(shell date +%Y%m%d)
@@ -43,4 +44,4 @@ $(INSTALLDIR) dist tmp:
 .PHONY: release
 release: clean dist
 	make DESTDIR=./tmp install
-	tar -cvzf dist/$(NAME)_$(GIT_VER)_x86-64.tar.gz --owner=0 --group=0 -C ./tmp $(NAME)
+	tar -cvzf dist/$(NAME)_$(GIT_VER)_$(ARCH).tar.gz --owner=0 --group=0 -C ./tmp $(NAME)
