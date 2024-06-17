@@ -161,7 +161,7 @@ table.table.bottomless
 </head>
 
 <body>
-    <script src="{{.AssetsPath}}/js/jquery-3.3.1.min.js"></script>
+    <script src="{{.AssetsPath}}/js/jquery-3.7.1.min.js"></script>
     <script src="{{.AssetsPath}}/js/bootstrap.min.js"></script>
     <script src="{{.AssetsPath}}/js/Chart.min.js"></script>
     <script src="{{.AssetsPath}}/js/dmarc-report-converter.js"></script>
