@@ -89,6 +89,10 @@ There is a Docker Compose wrapper created by @nielsbom (thanks!):
 
 https://github.com/nielsbom/dmarc_report_viewer
 
+### Nix
+
+There is a Nix package [dmarc-report-converter][1] created by @Nebucatnetzer (thanks!):
+
 Configuration
 -------------
 
@@ -123,7 +127,7 @@ Copy config/config.dist.yaml to config.yaml and change parameters:
   * **delete** (bool): delete email messages from IMAP server if reports are fetched successfully
 
   * **debug** (bool): print debug messages during IMAP session?
-  
+
   * **security** (str): select encryption between "tls" (default), "starttls" or "plaintext"
 
 **output** section:
@@ -229,3 +233,4 @@ Thanks
 
 And we have a lot of [contributors](https://github.com/tierpod/dmarc-report-converter/graphs/contributors)!
 
+[1]: https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/dm/dmarc-report-converter/package.nix
